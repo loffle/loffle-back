@@ -8,4 +8,4 @@ class FileType(models.Model):
 class File(models.Model):
     url = models.URLField()
 
-    type = models.ForeignKey(FileType, on_delete=models.SET_NULL, null=True)
+    type = models.ForeignKey(FileType, on_delete=models.SET_NULL, null=True, blank=True)
