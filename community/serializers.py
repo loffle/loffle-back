@@ -49,4 +49,4 @@ class AnswerSerializer(ModelSerializer):
     class Meta:
         model = Answer
         exclude = ('is_deleted',)
-        read_only_fields = ('user',)
+        read_only_fields = ('question', 'user',)

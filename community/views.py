@@ -25,6 +25,22 @@ class CommonViewSet(ModelViewSet):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
+class ChildViewSet(CommonViewSet):
+
+    def get_queryset(self):
+        filters = {
+            self.parent_model._meta.model_name: self.kwargs['parent_pk']
+        }
+        return self.model.objects.filter(**filters)
+
+    def perform_create(self, serializer):
+        values = {
+            'user': self.request.user,
+            self.parent_model._meta.model_name: self.parent_model.objects.get(pk=self.kwargs['parent_pk'])
+        }
+        serializer.save(**values)
+
+
 # --------------------------------------------------
 
 class PostViewSet(CommonViewSet):
@@ -32,17 +48,11 @@ class PostViewSet(CommonViewSet):
     serializer_class = PostSerializer
 
 
-class PostCommentViewSet(CommonViewSet):
-    # queryset = PostComment.objects.all()
+class PostCommentViewSet(ChildViewSet):
     serializer_class = PostCommentSerializer
 
-    def get_queryset(self):
-        return PostComment.objects.filter(post=self.kwargs['parent_pk'])
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user,
-                        post=Post.objects.get(pk=self.kwargs['parent_pk'])
-                        )
+    parent_model = Post
+    model = PostComment
 
 
 class ReviewViewSet(CommonViewSet):
@@ -50,17 +60,11 @@ class ReviewViewSet(CommonViewSet):
     serializer_class = ReviewSerializer
 
 
-class ReviewCommentViewSet(CommonViewSet):
-    # queryset = ReviewComment.objects.all()
+class ReviewCommentViewSet(ChildViewSet):
     serializer_class = ReviewCommentSerializer
 
-    def get_queryset(self):
-        return ReviewComment.objects.filter(review=self.kwargs['parent_pk'])
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user,
-                        review=Review.objects.get(pk=self.kwargs['parent_pk'])
-                        )
+    parent_model = Review
+    model = ReviewComment
 
 
 class NoticeViewSet(CommonViewSet):
@@ -73,14 +77,8 @@ class QuestionViewSet(CommonViewSet):
     serializer_class = QuestionSerializer
 
 
-class AnswerViewSet(CommonViewSet):
-    # queryset = Answer.objects.all()
+class AnswerViewSet(ChildViewSet):
     serializer_class = AnswerSerializer
 
-    def get_queryset(self):
-        return Answer.objects.filter(question=self.kwargs['parent_pk'])
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user,
-                        question=Question.objects.get(pk=self.kwargs['parent_pk'])
-                        )
+    parent_model = Question
+    model = Answer
