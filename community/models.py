@@ -9,12 +9,12 @@ class CommonManager(models.Manager):
         # queryset = Post.objects.filter(is_deleted=False)
         # queryset = Post.objects.filter(is_deleted=False).prefetch_related('like').select_related('user')
         # 세 queryset 성능 및 속도 비교해보기
-        return super().get_queryset().prefetch_related('like').select_related('user').filter(is_deleted=False)
+        return super().get_queryset().select_related('user').filter(is_deleted=False)
 
 
 class DeletedObjManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().prefetch_related('like').select_related('user').filter(is_deleted=True)
+        return super().get_queryset().select_related('user').filter(is_deleted=True)
 
 
 # --------------------------------------------------------
