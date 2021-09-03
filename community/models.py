@@ -12,6 +12,11 @@ class CommonManager(models.Manager):
         return super().get_queryset().prefetch_related('like').select_related('user').filter(is_deleted=False)
 
 
+class DeletedObjManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('like').select_related('user').filter(is_deleted=True)
+
+
 # --------------------------------------------------------
 
 class Post(models.Model):
@@ -26,6 +31,7 @@ class Post(models.Model):
     like = models.ManyToManyField(User, related_name="liked_posts", blank=True)
 
     objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class PostComment(models.Model):
@@ -41,6 +47,7 @@ class PostComment(models.Model):
     # class Meta:
     #     db_table = '_'.join((__package__, 'post_comment'))
     objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class Review(models.Model):
@@ -56,6 +63,7 @@ class Review(models.Model):
     like = models.ManyToManyField(User, related_name="liked_reviews", blank=True)
 
     objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class ReviewComment(models.Model):
@@ -69,6 +77,7 @@ class ReviewComment(models.Model):
     like = models.ManyToManyField(User, related_name="liked_reviewcomments", blank=True)
 
     objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class Notice(models.Model):
@@ -82,6 +91,7 @@ class Notice(models.Model):
     # file = models.ManyToManyField(File, on_delete=models.SET_NULL, null=True, blank=True)  # File
 
     objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 # ================= #
@@ -107,6 +117,7 @@ class Question(models.Model):
     question_type = models.ForeignKey(QuestionType, related_name="questions", on_delete=models.SET_NULL, null=True)
 
     objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class Answer(models.Model):
@@ -121,3 +132,4 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, related_name="answers", on_delete=models.CASCADE)
 
     objects = CommonManager()
+    deleted_objects = DeletedObjManager()
