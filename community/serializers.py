@@ -1,47 +1,52 @@
-from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
 
 from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer
 
 
-class PostSerializer(serializers.ModelSerializer):
+class PostSerializer(ModelSerializer):
     class Meta:
         model = Post
-        fields = '__all__'
-        # fields = ('id', 'title', 'content', 'created_at', 'modified_at')
-        # read_only_fields = ['user', 'like']
+        exclude = ('is_deleted',)
+        read_only_fields = ('user', 'like')
 
 
-class PostCommentSerializer(serializers.ModelSerializer):
+class PostCommentSerializer(ModelSerializer):
     class Meta:
         model = PostComment
-        fields = '__all__'
+        exclude = ('is_deleted',)
+        read_only_fields = ('post', 'user', 'like')
 
 
-class ReviewSerializer(serializers.ModelSerializer):
+class ReviewSerializer(ModelSerializer):
     class Meta:
         model = Review
-        fields = '__all__'
+        exclude = ('is_deleted',)
+        read_only_fields = ('user', 'like')
 
 
-class ReviewCommentSerializer(serializers.ModelSerializer):
+class ReviewCommentSerializer(ModelSerializer):
     class Meta:
         model = ReviewComment
-        fields = '__all__'
+        exclude = ('is_deleted',)
+        read_only_fields = ('review', 'user', 'like')
 
 
-class NoticeSerializer(serializers.ModelSerializer):
+class NoticeSerializer(ModelSerializer):
     class Meta:
         model = Notice
-        fields = '__all__'
+        exclude = ('is_deleted',)
+        read_only_fields = ('user',)
 
 
-class QuestionSerializer(serializers.ModelSerializer):
+class QuestionSerializer(ModelSerializer):
     class Meta:
         model = Question
-        fields = '__all__'
+        exclude = ('is_deleted',)
+        read_only_fields = ('user',)
 
 
-class AnswerSerializer(serializers.ModelSerializer):
+class AnswerSerializer(ModelSerializer):
     class Meta:
         model = Answer
-        fields = '__all__'
+        exclude = ('is_deleted',)
+        read_only_fields = ('user',)
