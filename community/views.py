@@ -5,11 +5,13 @@ from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404, DestroyAPIView, RetrieveDestroyAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer
 from community.permissions import IsOwnerOrReadOnly
-from community.serializers import PostSerializer, PostCommentSerializer, ReviewSerializer, ReviewCommentSerializer, \
-    NoticeSerializer, QuestionSerializer, AnswerSerializer
+from community.serializers import ReviewSerializer, ReviewCommentSerializer, \
+    NoticeSerializer, QuestionSerializer, AnswerSerializer, PostListSerializer, PostDetailSerializer, \
+    PostCommentListSerializer, PostCommentDetailSerializer
 
 
 class CommonViewSet(ModelViewSet):
@@ -24,19 +26,25 @@ class CommonViewSet(ModelViewSet):
         obj.save()
         return Response(status=HTTP_204_NO_CONTENT)
 
+    def get_serializer_class(self):
+        try:
+            if self.detail is False:
+                return self.serializer_list_class
+            else:
+                return self.serializer_detail_class
+        except (KeyError, AttributeError):
+            return super().get_serializer_class()
+
 
 class ChildViewSet(CommonViewSet):
 
-    def get_queryset(self):
-        filters = {
-            self.parent_model._meta.model_name: self.kwargs['parent_pk']
-        }
-        return self.model.objects.filter(**filters)
-
     def perform_create(self, serializer):
+        parent_model_name = self.parent_model._meta.model_name
+
+        pm = get_object_or_404(self.parent_model.objects.all(), pk=self.get_parents_query_dict()[parent_model_name])
         values = {
             'user': self.request.user,
-            self.parent_model._meta.model_name: self.parent_model.objects.get(pk=self.kwargs['parent_pk'])
+            parent_model_name: pm,
         }
         serializer.save(**values)
 
@@ -45,11 +53,18 @@ class ChildViewSet(CommonViewSet):
 
 class PostViewSet(CommonViewSet):
     queryset = Post.objects.all()
-    serializer_class = PostSerializer
+
+    serializer_list_class = PostListSerializer
+    serializer_detail_class = PostDetailSerializer
+
+    model = Post
 
 
-class PostCommentViewSet(ChildViewSet):
-    serializer_class = PostCommentSerializer
+class PostCommentViewSet(NestedViewSetMixin, ChildViewSet):
+    queryset = PostComment.objects.all()
+
+    serializer_list_class = PostCommentListSerializer
+    serializer_detail_class = PostCommentDetailSerializer
 
     parent_model = Post
     model = PostComment
