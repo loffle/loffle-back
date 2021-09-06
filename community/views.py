@@ -36,7 +36,7 @@ class CommonViewSet(ModelViewSet):
             return super().get_serializer_class()
 
 
-class ChildViewSet(CommonViewSet):
+class ChildViewSet(NestedViewSetMixin, CommonViewSet):
 
     def perform_create(self, serializer):
         parent_model_name = self.parent_model._meta.model_name
@@ -60,7 +60,7 @@ class PostViewSet(CommonViewSet):
     model = Post
 
 
-class PostCommentViewSet(NestedViewSetMixin, ChildViewSet):
+class PostCommentViewSet(ChildViewSet):
     queryset = PostComment.objects.all()
 
     serializer_list_class = PostCommentListSerializer
