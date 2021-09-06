@@ -33,7 +33,7 @@ class LikeFieldSerializer(Serializer):
         return obj.like.count()
 
     def get_like_or_not(self, obj):
-        return self.context['request'].user in obj.like.all()
+        return obj.like.filter(pk=self.context['request'].user.pk).exists()
 
 
 # ============================================================================
