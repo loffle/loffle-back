@@ -9,9 +9,10 @@ from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer
 from community.permissions import IsOwnerOrReadOnly
-from community.serializers import ReviewSerializer, ReviewCommentSerializer, \
-    NoticeSerializer, QuestionSerializer, AnswerSerializer, PostListSerializer, PostDetailSerializer, \
-    PostCommentListSerializer, PostCommentDetailSerializer
+from community.serializers import PostListSerializer, PostDetailSerializer, PostCommentListSerializer, \
+    PostCommentDetailSerializer, ReviewCommentDetailSerializer, ReviewCommentListSerializer, ReviewListSerializer, \
+    ReviewDetailSerializer, NoticeListSerializer, NoticeDetailSerializer, QuestionListSerializer, \
+    QuestionDetailSerializer, AnswerDetailSerializer, AnswerListSerializer
 
 
 class CommonViewSet(ModelViewSet):
@@ -49,7 +50,7 @@ class ChildViewSet(NestedViewSetMixin, CommonViewSet):
         serializer.save(**values)
 
 
-# --------------------------------------------------
+# ===============================================================
 
 class PostViewSet(CommonViewSet):
     queryset = Post.objects.all()
@@ -72,28 +73,49 @@ class PostCommentViewSet(ChildViewSet):
 
 class ReviewViewSet(CommonViewSet):
     queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
+
+    serializer_list_class = ReviewListSerializer
+    serializer_detail_class = ReviewDetailSerializer
+
+    model = Review
 
 
 class ReviewCommentViewSet(ChildViewSet):
-    serializer_class = ReviewCommentSerializer
+    queryset = ReviewComment.objects.all()
+
+    serializer_list_class = ReviewCommentListSerializer
+    serializer_detail_class = ReviewCommentDetailSerializer
 
     parent_model = Review
     model = ReviewComment
 
 
+# ---------------------------------------------------------------
+
 class NoticeViewSet(CommonViewSet):
     queryset = Notice.objects.all()
-    serializer_class = NoticeSerializer
 
+    serializer_list_class = NoticeListSerializer
+    serializer_detail_class = NoticeDetailSerializer
+
+    model = Notice
+
+
+# ---------------------------------------------------------------
 
 class QuestionViewSet(CommonViewSet):
     queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
+
+    serializer_list_class = QuestionListSerializer
+    serializer_detail_class = QuestionDetailSerializer
+
+    model = Question
 
 
-class AnswerViewSet(ChildViewSet):
-    serializer_class = AnswerSerializer
+class AnswerViewSet(CommonViewSet):
+    queryset = Answer.objects.all()
 
-    parent_model = Question
+    serializer_list_class = AnswerListSerializer
+    serializer_detail_class = AnswerDetailSerializer
+
     model = Answer

@@ -1,7 +1,7 @@
 from abc import ABC
 
 from rest_framework.fields import SerializerMethodField
-from rest_framework.relations import HyperlinkedIdentityField, PrimaryKeyRelatedField
+from rest_framework.relations import HyperlinkedIdentityField, PrimaryKeyRelatedField, StringRelatedField
 
 from rest_framework.serializers import ModelSerializer, BaseSerializer, Serializer
 
@@ -9,11 +9,19 @@ from community.models import Post, PostComment, Review, ReviewComment, Notice, Q
 
 from community.serializer_fields import CommentListUrlField, CommentDetailUrlField
 
+EXCLUDE = ('is_deleted',)
+READ_ONLY_FIELDS = ('user',)
 
-class CommonModelSerializer(ModelSerializer):
-    class Meta:
-        exclude = ('is_deleted',)
-        read_only_fields = ('user',)
+
+class CommentSerializer(ModelSerializer):
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if 'user' in ret:
+            ret['user'] = instance.user.username
+        elif 'question_type' in ret:
+            ret['question_type'] = str(instance.question_type)
+        return ret
 
 
 class LikeFieldSerializer(Serializer):
@@ -28,74 +36,134 @@ class LikeFieldSerializer(Serializer):
         return self.context['request'].user in obj.like.all()
 
 
-# -------------------------------
+# ============================================================================
 
-class PostCommentListSerializer(CommonModelSerializer):
-    url = CommentDetailUrlField(view_name='post-comment-detail', read_only=True)
+# ----- PostComment, Post ----- #
+class PostCommentListSerializer(CommentSerializer):
+    url = CommentDetailUrlField(view_name='post-comment-detail')
 
     class Meta:
         model = PostComment
-        exclude = ('is_deleted',)
-        read_only_fields = ('post', 'user', 'like')
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('post', 'like',)
 
 
-class PostCommentDetailSerializer(CommonModelSerializer):
+class PostCommentDetailSerializer(CommentSerializer):
     class Meta:
         model = PostComment
-        exclude = ('is_deleted',)
-        read_only_fields = ('post', 'user', 'like')
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('post', 'like',)
 
 
-class PostListSerializer(CommonModelSerializer, LikeFieldSerializer):
-    url = HyperlinkedIdentityField(view_name='post-detail', read_only=True)
+class PostListSerializer(CommentSerializer, LikeFieldSerializer):
+    url = HyperlinkedIdentityField(view_name='post-detail')
 
-    class Meta(CommonModelSerializer.Meta):
+    class Meta:
         model = Post
-        # exclude = ('is_deleted',)
-        # read_only_fields = ('user', 'like')
-        read_only_fields = CommonModelSerializer.Meta.read_only_fields + ('like',)
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('like',)
 
 
-class PostDetailSerializer(CommonModelSerializer, LikeFieldSerializer):
-    comment_url = CommentListUrlField(view_name='post-comment-list', read_only=True)
+class PostDetailSerializer(CommentSerializer, LikeFieldSerializer):
+    comment_url = CommentListUrlField(view_name='post-comment-list')
     comments = PostCommentListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        exclude = ('is_deleted',)
-        read_only_fields = ('user', 'like')
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('like',)
 
 
-class ReviewSerializer(CommonModelSerializer):
-    class Meta:
-        model = Review
-        exclude = ('is_deleted',)
-        read_only_fields = ('user', 'like')
+# -------------------------------------------------------------------------------
 
+# ----- ReviewComment, Review ----- #
+class ReviewCommentListSerializer(CommentSerializer):
+    url = CommentDetailUrlField(view_name='review-comment-detail')
 
-class ReviewCommentSerializer(CommonModelSerializer):
     class Meta:
         model = ReviewComment
-        exclude = ('is_deleted',)
-        read_only_fields = ('review', 'user', 'like')
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('review', 'like',)
 
 
-class NoticeSerializer(CommonModelSerializer):
+class ReviewCommentDetailSerializer(CommentSerializer):
+    class Meta:
+        model = ReviewComment
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('review', 'like',)
+
+
+class ReviewListSerializer(CommentSerializer, LikeFieldSerializer):
+    url = HyperlinkedIdentityField(view_name='review-detail')
+
+    class Meta:
+        model = Review
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('like',)
+
+
+class ReviewDetailSerializer(CommentSerializer, LikeFieldSerializer):
+    comment_url = CommentListUrlField(view_name='review-comment-list')
+    comments = ReviewCommentListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Review
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('like',)
+
+
+# -----------------------------------------------------------------------------------
+
+# ----- Notice ----- #
+class NoticeListSerializer(CommentSerializer):
+    url = HyperlinkedIdentityField(view_name='notice-detail')
+
     class Meta:
         model = Notice
-        exclude = ('is_deleted',)
-        read_only_fields = ('user',)
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS
 
 
-class QuestionSerializer(CommonModelSerializer):
+class NoticeDetailSerializer(CommentSerializer):
     class Meta:
-        model = Question
-        exclude = ('is_deleted',)
-        read_only_fields = ('user',)
+        model = Notice
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS
 
 
-class AnswerSerializer(CommonModelSerializer):
+# -----------------------------------------------------------------
+
+# ----- Answer, Question ----- #
+class AnswerListSerializer(CommentSerializer):
+    url = CommentDetailUrlField(view_name='answer-detail')
+
     class Meta:
         model = Answer
-        exclude = ('is_deleted',)
-        read_only_fields = ('question', 'user',)
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('question',)
+
+
+class AnswerDetailSerializer(CommentSerializer):
+    class Meta:
+        model = Answer
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS + ('question',)
+
+
+class QuestionListSerializer(CommentSerializer):
+    url = HyperlinkedIdentityField(view_name='question-detail')
+
+    class Meta:
+        model = Question
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS
+
+
+class QuestionDetailSerializer(CommentSerializer):
+    answer_url = CommentListUrlField(view_name='answer-list')
+    answers = AnswerListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        exclude = EXCLUDE
+        read_only_fields = READ_ONLY_FIELDS

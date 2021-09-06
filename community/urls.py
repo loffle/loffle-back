@@ -12,14 +12,22 @@ from community.views import PostViewSet, PostCommentViewSet, ReviewViewSet, Noti
 # router.register('question', QuestionViewSet, basename='question')
 
 router = ExtendedDefaultRouter()
-router.register('post', PostViewSet, basename='post')\
-            .register('comment',
-                      PostCommentViewSet,
-                      basename='post-comment',
-                      parents_query_lookups=('post',))
-router.register('review', ReviewViewSet, basename='review')
+router.register('post', PostViewSet, basename='post') \
+                .register('comment',
+                          PostCommentViewSet,
+                          basename='post-comment',
+                          parents_query_lookups=('post',))
+router.register('review', ReviewViewSet, basename='review') \
+                .register('comment',
+                          ReviewCommentViewSet,
+                          basename='review-comment',
+                          parents_query_lookups=('review',))
 router.register('notice', NoticeViewSet, basename='notice')
-router.register('question', QuestionViewSet, basename='question')
+router.register('question', QuestionViewSet, basename='question') \
+                .register('answer',
+                          AnswerViewSet,
+                          basename='answer',
+                          parents_query_lookups=('question',))
 
 urlpatterns = [
     path('', include(router.urls)),
