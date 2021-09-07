@@ -14,7 +14,7 @@ from pathlib import Path
 from json import loads
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 with open(BASE_DIR / 'secrets.json', 'r') as f:
     SECRETS = loads(f.read())
