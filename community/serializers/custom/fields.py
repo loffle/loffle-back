@@ -23,7 +23,6 @@ class CommentDetailUrlField(HyperlinkedIdentityField):
     parent_kwarg_prefix = extensions_api_settings.DEFAULT_PARENT_LOOKUP_KWARG_NAME_PREFIX
 
     def get_url(self, obj, view_name, request, format):
-
         try:
             self.context['view'].parent_model
             # if view's model == child model
