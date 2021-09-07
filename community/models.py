@@ -4,6 +4,21 @@ from django.db import models
 from file.models import File
 
 
+class CommonManager(models.Manager):
+    def get_queryset(self):
+        # queryset = Post.objects.filter(is_deleted=False)
+        # queryset = Post.objects.filter(is_deleted=False).prefetch_related('like').select_related('user')
+        # 세 queryset 성능 및 속도 비교해보기
+        return super().get_queryset().select_related('user').filter(is_deleted=False)
+
+
+class DeletedObjManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('user').filter(is_deleted=True)
+
+
+# --------------------------------------------------------
+
 class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
@@ -14,6 +29,9 @@ class Post(models.Model):
     user = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
     # file = models.ManyToManyField(File, on_delete=models.SET_NULL, null=True, blank=True)  # File
     like = models.ManyToManyField(User, related_name="liked_posts", blank=True)
+
+    objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class PostComment(models.Model):
@@ -28,6 +46,8 @@ class PostComment(models.Model):
 
     # class Meta:
     #     db_table = '_'.join((__package__, 'post_comment'))
+    objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class Review(models.Model):
@@ -42,6 +62,9 @@ class Review(models.Model):
     # raffle = models.ForeignKey(Raffle, on_delete=models.CASCADE)
     like = models.ManyToManyField(User, related_name="liked_reviews", blank=True)
 
+    objects = CommonManager()
+    deleted_objects = DeletedObjManager()
+
 
 class ReviewComment(models.Model):
     content = models.CharField(max_length=200)
@@ -52,6 +75,9 @@ class ReviewComment(models.Model):
     review = models.ForeignKey(Review, related_name="comments", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="reviewcomments", on_delete=models.CASCADE)
     like = models.ManyToManyField(User, related_name="liked_reviewcomments", blank=True)
+
+    objects = CommonManager()
+    deleted_objects = DeletedObjManager()
 
 
 class Notice(models.Model):
@@ -64,6 +90,9 @@ class Notice(models.Model):
     user = models.ForeignKey(User, related_name="notices", on_delete=models.CASCADE)
     # file = models.ManyToManyField(File, on_delete=models.SET_NULL, null=True, blank=True)  # File
 
+    objects = CommonManager()
+    deleted_objects = DeletedObjManager()
+
 
 # ================= #
 # Question & Answer #
@@ -71,6 +100,9 @@ class Notice(models.Model):
 
 class QuestionType(models.Model):
     name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
 
 
 class Question(models.Model):
@@ -84,6 +116,9 @@ class Question(models.Model):
     # file = models.ManyToManyField(File, on_delete=models.SET_NULL, null=True, blank=True)  # File
     question_type = models.ForeignKey(QuestionType, related_name="questions", on_delete=models.SET_NULL, null=True)
 
+    objects = CommonManager()
+    deleted_objects = DeletedObjManager()
+
 
 class Answer(models.Model):
     title = models.CharField(max_length=200)
@@ -95,3 +130,6 @@ class Answer(models.Model):
     user = models.ForeignKey(User, related_name="answers", on_delete=models.CASCADE)
     # file = models.ForeignKey(File, on_delete=models.SET_NULL, null=True, blank=True)  # File
     question = models.ForeignKey(Question, related_name="answers", on_delete=models.CASCADE)
+
+    objects = CommonManager()
+    deleted_objects = DeletedObjManager()
