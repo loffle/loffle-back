@@ -1,12 +1,28 @@
+import os
+
 from .base import *
 
 DEBUG = False
 
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+
 ALLOWED_HOSTS = [
     '127.0.0.1',
-    'Loffleback-env.us-west-2.elasticbeanstalk.com',
+    'loffle-back-dev.us-west-2.elasticbeanstalk.com',
 ]
 
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_DIRS = [
 ]
+
+if 'RDS_HOSTNAME' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ['RDS_DB_NAME'],
+            'USER': os.environ['RDS_USERNAME'],
+            'PASSWORD': os.environ['RDS_PASSWORD'],
+            'HOST': os.environ['RDS_HOSTNAME'],
+            'PORT': os.environ['RDS_PORT'],
+        }
+    }
