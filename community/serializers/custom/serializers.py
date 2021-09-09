@@ -31,3 +31,11 @@ class CommentField(Serializer):
     @staticmethod
     def get_comment_count(obj):
         return obj.comments.count()
+
+
+class AnswerField(Serializer):
+    answer_count = SerializerMethodField()
+
+    @staticmethod
+    def get_answer_count(obj):
+        return obj.answers.count()

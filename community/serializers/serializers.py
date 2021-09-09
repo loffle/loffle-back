@@ -1,9 +1,9 @@
 from rest_framework.relations import HyperlinkedIdentityField
 
 from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer
-from community.serializers.custom.serializers import CommonSerializer, LikeField, CommentField
+from community.serializers.custom.serializers import CommonSerializer, LikeField, CommentField, AnswerField
 
-from community.serializers.custom.fields import CommentListUrlField, CommentDetailUrlField
+from community.serializers.custom.url_fields import CommentListUrlField, CommentDetailUrlField
 
 EXCLUDE = ('is_deleted',)
 READ_ONLY_FIELDS = ('user',)
@@ -43,7 +43,7 @@ class PostListSerializer(CommonSerializer, LikeField, CommentField):
         read_only_fields = POST_ROF
 
 
-class PostDetailSerializer(CommonSerializer, LikeField):
+class PostDetailSerializer(CommonSerializer, LikeField, CommentField):
     comment_url = CommentListUrlField(view_name='post-comment-list')
 
     # comments = PostCommentListSerializer(many=True, read_only=True)
@@ -73,7 +73,7 @@ class ReviewCommentDetailSerializer(CommonSerializer, LikeField):
         read_only_fields = REVIEW_COMMENT_ROF
 
 
-class ReviewListSerializer(CommonSerializer, LikeField):
+class ReviewListSerializer(CommonSerializer, LikeField, CommentField):
     url = HyperlinkedIdentityField(view_name='review-detail')
 
     class Meta:
@@ -82,7 +82,7 @@ class ReviewListSerializer(CommonSerializer, LikeField):
         read_only_fields = REVIEW_ROF
 
 
-class ReviewDetailSerializer(CommonSerializer, LikeField):
+class ReviewDetailSerializer(CommonSerializer, LikeField, CommentField):
     comment_url = CommentListUrlField(view_name='review-comment-list')
 
     # comments = ReviewCommentListSerializer(many=True, read_only=True)
@@ -131,7 +131,7 @@ class AnswerDetailSerializer(CommonSerializer):
         read_only_fields = ANSWER_ROF
 
 
-class QuestionListSerializer(CommonSerializer):
+class QuestionListSerializer(CommonSerializer, AnswerField):
     url = HyperlinkedIdentityField(view_name='question-detail')
 
     class Meta:
@@ -140,7 +140,7 @@ class QuestionListSerializer(CommonSerializer):
         read_only_fields = READ_ONLY_FIELDS
 
 
-class QuestionDetailSerializer(CommonSerializer):
+class QuestionDetailSerializer(CommonSerializer, AnswerField):
     answer_url = CommentListUrlField(view_name='answer-list')
 
     # answers = AnswerListSerializer(many=True, read_only=True)
