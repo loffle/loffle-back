@@ -7,8 +7,10 @@ DEBUG = False
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 ALLOWED_HOSTS = [
-    '127.0.0.1',
+    # '127.0.0.1',
     'loffle-back-dev.us-west-2.elasticbeanstalk.com',
+    'loffle.cf',
+
 ]
 
 STATIC_ROOT = BASE_DIR / 'static'
