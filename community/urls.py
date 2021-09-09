@@ -29,33 +29,8 @@ router.register('question', QuestionViewSet, basename='question') \
                           basename='answer',
                           parents_query_lookups=('question',))
 
+router.include_root_view = False
+
 urlpatterns = [
     path('', include(router.urls)),
-
-    # path('post/<int:parent_pk>/comment/',
-    #      PostCommentViewSet.as_view({
-    #          'get': 'list', 'post': 'create',
-    #      }, suffix='List'), name='postcomment-list'),
-    # path('post/<int:parent_pk>/comment/<int:pk>/',
-    #      PostCommentViewSet.as_view({
-    #          'delete': 'destroy',
-    #      }, suffix='Detail'), name='postcomment-detail'),
-
-    # path('review/<int:parent_pk>/comment/',
-    #      ReviewCommentViewSet.as_view({
-    #          'get': 'list', 'post': 'create',
-    #      }, suffix='List'), name='reviewcomment-list'),
-    # path('review/<int:parent_pk>/comment/<int:pk>/',
-    #      ReviewCommentViewSet.as_view({
-    #          'delete': 'destroy',
-    #      }, suffix='Detail'), name='reviewcomment-detail'),
-    #
-    # path('question/<int:parent_pk>/answer/',
-    #      AnswerViewSet.as_view({
-    #          'get': 'list', 'post': 'create',
-    #      }, suffix='List'), name='answer-list'),
-    # path('question/<int:parent_pk>/answer/<int:pk>/',
-    #      AnswerViewSet.as_view({
-    #          'delete': 'destroy',
-    #      }, suffix='Detail'), name='answer-detail'),
 ]
