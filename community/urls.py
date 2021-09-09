@@ -29,6 +29,8 @@ router.register('question', QuestionViewSet, basename='question') \
                           basename='answer',
                           parents_query_lookups=('question',))
 
+router.include_root_view = False
+
 urlpatterns = [
     path('', include(router.urls)),
 ]

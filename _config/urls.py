@@ -19,7 +19,13 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter, APIRootView
 from rest_framework.urlpatterns import format_suffix_patterns
 
+import community.urls
+
+router = DefaultRouter()
+router.registry.extend(community.urls.router.registry)
+
 urlpatterns = [
+    path('', include(router.urls)),
     path('admin/', admin.site.urls),
     path('community/', include('community.urls'), name='community')
 ]
