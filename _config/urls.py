@@ -27,5 +27,6 @@ router.registry.extend(community.urls.router.registry)
 urlpatterns = [
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
-    path('community/', include('community.urls'), name='community')
+    path('community/', include('community.urls'), name='community'),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
