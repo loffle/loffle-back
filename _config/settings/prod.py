@@ -9,6 +9,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 ALLOWED_HOSTS = [
     # '127.0.0.1',
     'loffle-back-dev.us-west-2.elasticbeanstalk.com',
+    'loffle-back-prod.us-west-2.elasticbeanstalk.com',
     'loffle.cf',
 
 ]
