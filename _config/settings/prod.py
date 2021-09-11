@@ -9,6 +9,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 ALLOWED_HOSTS = [
     # '127.0.0.1',
     'loffle-back-dev.us-west-2.elasticbeanstalk.com',
+    'loffle-back-prod.us-west-2.elasticbeanstalk.com',
     'loffle.cf',
 
 ]
@@ -26,5 +27,10 @@ if 'RDS_HOSTNAME' in os.environ:
             'PASSWORD': os.environ['RDS_PASSWORD'],
             'HOST': os.environ['RDS_HOSTNAME'],
             'PORT': os.environ['RDS_PORT'],
+
         }
     }
+
+import socket
+local_ip = str(socket.gethostbyname(socket.gethostname()))
+ALLOWED_HOSTS.append(local_ip)
