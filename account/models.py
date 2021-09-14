@@ -1,3 +1,43 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser, UserManager
 
-# Create your models here.
+
+class User(AbstractUser):
+    email = models.EmailField(
+        verbose_name='email address',
+        max_length=255,
+        unique=True,
+    )
+    username = models.CharField(
+        verbose_name='nick name',
+        max_length=24,
+        unique=True
+    )
+
+    SEX_CHOICES = (
+        ('M', '남자',),
+        ('F', '여자',),
+    )
+    sex = models.CharField(max_length=1, choices=SEX_CHOICES)
+    phone = models.CharField(max_length=11, unique=True)
+
+    last_name = None
+    first_name = None
+    # is_active = models.BooleanField(default=True)
+    # is_admin = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'sex', 'phone']
+
+    def get_full_name(self):
+        # The user is identified by their email address
+        return self.email
+
+    def get_short_name(self):
+        # The user is identified by their email address
+        return self.email
+
+    def __str__(self):  # __unicode__ on Python 2
+        return self.email
