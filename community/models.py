@@ -1,7 +1,6 @@
-from django.contrib.auth.models import User
 from django.db import models
 
-from file.models import File
+from account.models import User
 
 
 class CommonManager(models.Manager):

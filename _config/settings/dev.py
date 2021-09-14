@@ -1,3 +1,5 @@
+from json import loads
+
 from .base import *
 
 with open(BASE_DIR / 'secrets.json', 'r') as f:
