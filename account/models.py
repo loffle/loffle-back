@@ -13,15 +13,13 @@ class User(AbstractUser):
         max_length=24,
         unique=True,
     )
-
-    SEX_CHOICES = (
-        ('M', '남자',),
-        ('F', '여자',),
-    )
     sex = models.CharField(
         verbose_name='성별',
         max_length=1,
-        choices=SEX_CHOICES,
+        choices=(
+            ('M', '남자',),
+            ('F', '여자',),
+        ),
     )
     phone = models.CharField(
         verbose_name='핸드폰',
