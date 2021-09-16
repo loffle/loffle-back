@@ -4,27 +4,31 @@ from django.contrib.auth.models import AbstractUser, UserManager
 
 class User(AbstractUser):
     email = models.EmailField(
-        verbose_name='email address',
+        verbose_name='이메일',
         max_length=255,
         unique=True,
     )
     username = models.CharField(
-        verbose_name='nick name',
+        verbose_name='닉네임',
         max_length=24,
-        unique=True
+        unique=True,
     )
-
-    SEX_CHOICES = (
-        ('M', '남자',),
-        ('F', '여자',),
+    sex = models.CharField(
+        verbose_name='성별',
+        max_length=1,
+        choices=(
+            ('M', '남자',),
+            ('F', '여자',),
+        ),
     )
-    sex = models.CharField(max_length=1, choices=SEX_CHOICES)
-    phone = models.CharField(max_length=11, unique=True)
+    phone = models.CharField(
+        verbose_name='핸드폰',
+        max_length=11,
+        unique=True,
+    )
 
     last_name = None
     first_name = None
-    # is_active = models.BooleanField(default=True)
-    # is_admin = models.BooleanField(default=False)
 
     objects = UserManager()
 

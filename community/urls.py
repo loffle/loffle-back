@@ -11,7 +11,7 @@ from community.views import PostViewSet, PostCommentViewSet, ReviewViewSet, Noti
 # router.register('notice', NoticeViewSet, basename='notice')
 # router.register('question', QuestionViewSet, basename='question')
 
-router = ExtendedDefaultRouter()
+router = ExtendedDefaultRouter(trailing_slash=False)
 router.register('post', PostViewSet, basename='post') \
                 .register('comment',
                           PostCommentViewSet,
@@ -32,5 +32,5 @@ router.register('question', QuestionViewSet, basename='question') \
 router.include_root_view = False
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('/', include(router.urls)),
 ]
