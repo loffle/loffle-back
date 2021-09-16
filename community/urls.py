@@ -32,5 +32,5 @@ router.register('question', QuestionViewSet, basename='question') \
 router.include_root_view = False
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('/', include(router.urls)),
 ]
