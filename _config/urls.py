@@ -21,13 +21,16 @@ from rest_framework.routers import DefaultRouter, APIRootView
 from rest_framework.urlpatterns import format_suffix_patterns
 
 import community.urls
+import account.urls
 
 router = DefaultRouter()
 router.registry.extend(community.urls.router.registry)
+# router.registry.extend(account.urls.router.registry)
 
 urlpatterns = [
     path('', include(router.urls)),
     path('community', include('community.urls'), name='community'),
+    path('account', include('account.urls'), name='account'),
 
     path('api-token-auth', obtain_auth_token),
 
