@@ -17,15 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
-from rest_framework.routers import DefaultRouter, APIRootView
-from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework.routers import DefaultRouter
 
 import community.urls
-import account.urls
 
 router = DefaultRouter()
 router.registry.extend(community.urls.router.registry)
-# router.registry.extend(account.urls.router.registry)
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -35,5 +32,5 @@ urlpatterns = [
     path('api-token-auth', obtain_auth_token),
 
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
