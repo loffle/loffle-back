@@ -15,5 +15,6 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         field_names = list(self.get_fields().keys())[1:]  # get_fields() is OrderedDict(), so id's index is 0
         validated_dict = {field: validated_data[field] for field in field_names}
+        validated_dict['is_active'] = False
         user = User.objects.create_user(**validated_dict)
         return user
