@@ -4,16 +4,16 @@ from account.models import User
 
 
 class CommonManager(models.Manager):
+    
+    def __init__(self, is_deleted=False):
+        super().__init__()
+        self.is_deleted = is_deleted
+    
     def get_queryset(self):
         # queryset = Post.objects.filter(is_deleted=False)
         # queryset = Post.objects.filter(is_deleted=False).prefetch_related('like').select_related('user')
         # 세 queryset 성능 및 속도 비교해보기
-        return super().get_queryset().select_related('user').filter(is_deleted=False)
-
-
-class DeletedObjManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().select_related('user').filter(is_deleted=True)
+        return super().get_queryset().select_related('user').filter(is_deleted=self.is_deleted)
 
 
 # --------------------------------------------------------
@@ -30,7 +30,7 @@ class Post(models.Model):
     like = models.ManyToManyField(User, related_name="liked_posts", blank=True)
 
     objects = CommonManager()
-    deleted_objects = DeletedObjManager()
+    deleted_objects = CommonManager(is_deleted=True)
 
 
 class PostComment(models.Model):
@@ -46,7 +46,7 @@ class PostComment(models.Model):
     # class Meta:
     #     db_table = '_'.join((__package__, 'post_comment'))
     objects = CommonManager()
-    deleted_objects = DeletedObjManager()
+    deleted_objects = CommonManager(is_deleted=True)
 
 
 class Review(models.Model):
@@ -62,7 +62,7 @@ class Review(models.Model):
     like = models.ManyToManyField(User, related_name="liked_reviews", blank=True)
 
     objects = CommonManager()
-    deleted_objects = DeletedObjManager()
+    deleted_objects = CommonManager(is_deleted=True)
 
 
 class ReviewComment(models.Model):
@@ -76,7 +76,7 @@ class ReviewComment(models.Model):
     like = models.ManyToManyField(User, related_name="liked_reviewcomments", blank=True)
 
     objects = CommonManager()
-    deleted_objects = DeletedObjManager()
+    deleted_objects = CommonManager(is_deleted=True)
 
 
 class Notice(models.Model):
@@ -90,7 +90,7 @@ class Notice(models.Model):
     # file = models.ManyToManyField(File, on_delete=models.SET_NULL, null=True, blank=True)  # File
 
     objects = CommonManager()
-    deleted_objects = DeletedObjManager()
+    deleted_objects = CommonManager(is_deleted=True)
 
 
 # ================= #
@@ -116,7 +116,7 @@ class Question(models.Model):
     question_type = models.ForeignKey(QuestionType, related_name="questions", on_delete=models.SET_NULL, null=True)
 
     objects = CommonManager()
-    deleted_objects = DeletedObjManager()
+    deleted_objects = CommonManager(is_deleted=True)
 
 
 class Answer(models.Model):
@@ -131,4 +131,4 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, related_name="answers", on_delete=models.CASCADE)
 
     objects = CommonManager()
-    deleted_objects = DeletedObjManager()
+    deleted_objects = CommonManager(is_deleted=True)

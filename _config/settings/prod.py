@@ -36,3 +36,6 @@ if 'RDS_HOSTNAME' in os.environ:
 import socket
 local_ip = str(socket.gethostbyname(socket.gethostname()))
 ALLOWED_HOSTS.append(local_ip)
+
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
