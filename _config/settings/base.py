@@ -141,3 +141,13 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'account.User'
 
 APPEND_SLASH = False
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_POST = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+# 개발, 배포 환경에 각각 다르게 설정
+EMAIL_HOST_USER = None
+EMAIL_HOST_PASSWORD = None
+
+PASSWORD_RESET_TIMEOUT_DAYS = 1 # 패스워드 토큰의 유효기간 (default: 3)
