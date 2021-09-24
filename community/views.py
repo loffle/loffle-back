@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet, ViewSetMixin, ViewSet
-from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
+from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -48,13 +48,15 @@ class CommonViewSet(ModelViewSet):
     def add_like(self, request, **kwargs):
         obj = self.get_object()
         if obj.like.filter(pk=request.user.pk).exists():
-            result = '좋아요 취소😥'
-            obj.like.remove(request.user)
-            return Response(result, status=HTTP_204_NO_CONTENT)
-        else:
+            if request.method == "DELETE":
+                result = '좋아요 취소😥'
+                obj.like.remove(request.user)
+                return Response(status=HTTP_204_NO_CONTENT)
+        elif request.method == "POST":
             result = '좋아요 성공✅'
             obj.like.add(request.user)
-            return Response(result, status=HTTP_201_CREATED)
+            return Response({'detail': result}, status=HTTP_201_CREATED)
+        return Response({'detail': '잘못된 요청입니다.'}, status=HTTP_400_BAD_REQUEST)
 
 
 class ChildViewSet(NestedViewSetMixin, CommonViewSet):
@@ -80,9 +82,9 @@ class PostViewSet(CommonViewSet):
 
     model = Post
 
-    search_fields = CommonViewSet.search_fields + ('title', 'comments__content')
+    search_fields = CommonViewSet.search_fields + ('title',)
 
-    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,),
+    @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
             url_path='add-like', url_name='add-like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
@@ -111,7 +113,7 @@ class ReviewViewSet(CommonViewSet):
 
     model = Review
 
-    search_fields = CommonViewSet.search_fields + ('title', 'comments__content')
+    search_fields = CommonViewSet.search_fields + ('title',)
 
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,),
             url_path='add-like', url_name='add-like')
@@ -155,7 +157,7 @@ class QuestionViewSet(CommonViewSet):
 
     model = Question
 
-    search_fields = CommonViewSet.search_fields + ('title', 'answers__content')
+    search_fields = CommonViewSet.search_fields + ('title',)
 
 
 class AnswerViewSet(ChildViewSet):
