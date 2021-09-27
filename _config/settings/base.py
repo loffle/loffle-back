@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'rest_framework.authtoken',
+    'drf_yasg',
 
     'community.apps.CommunityConfig',
     'account.apps.AccountConfig',
@@ -151,3 +152,7 @@ EMAIL_HOST_USER = None
 EMAIL_HOST_PASSWORD = None
 
 PASSWORD_RESET_TIMEOUT_DAYS = 1 # 패스워드 토큰의 유효기간 (default: 3)
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+}
