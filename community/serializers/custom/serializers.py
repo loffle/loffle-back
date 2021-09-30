@@ -8,8 +8,8 @@ class CommonSerializer(ModelSerializer):
         ret = super().to_representation(instance)
         if 'user' in ret:
             ret['user'] = instance.user.username
-        elif 'question_type' in ret:
-            ret['question_type'] = str(instance.question_type)
+        if 'question_type' in ret:
+            ret['question_type'] = instance.question_type.name
         return ret
 
 
