@@ -23,10 +23,8 @@ mysqlclient==2.0.3
 packaging==21.0
 pathspec==0.5.9
 pyparsing==2.4.7
-pypiwin32==223
 python-dateutil==2.8.2
 pytz==2021.1
-pywin32==301
 PyYAML==5.4.1
 requests==2.26.0
 ruamel.yaml==0.17.16
