@@ -98,7 +98,7 @@ class Notice(models.Model):
 # ================= #
 
 class QuestionType(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
@@ -113,7 +113,7 @@ class Question(models.Model):
 
     user = models.ForeignKey(User, related_name="questions", on_delete=models.CASCADE)
     # file = models.ManyToManyField(File, on_delete=models.SET_NULL, null=True, blank=True)  # File
-    question_type = models.ForeignKey(QuestionType, related_name="questions", on_delete=models.SET_NULL, null=True)
+    question_type = models.ForeignKey(QuestionType, related_name="questions", on_delete=models.PROTECT)
 
     objects = CommonManager()
     deleted_objects = CommonManager(is_deleted=True)
