@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_framework_extensions.routers import ExtendedDefaultRouter
 
 from community.views import PostViewSet, PostCommentViewSet, ReviewViewSet, NoticeViewSet, QuestionViewSet, \
-    AnswerViewSet, ReviewCommentViewSet
+    AnswerViewSet, ReviewCommentViewSet, QuestionTypeViewSet
 
 # router = DefaultRouter()
 # router.register('post', PostViewSet, basename='post')
@@ -28,6 +28,8 @@ router.register('question', QuestionViewSet, basename='question') \
                           AnswerViewSet,
                           basename='answer',
                           parents_query_lookups=('question',))
+router.register('questiontype', QuestionTypeViewSet, basename='questiontype') \
+
 
 router.include_root_view = False
 
