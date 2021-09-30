@@ -1,20 +1,20 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.viewsets import ModelViewSet, ViewSetMixin, ViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
-from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer
+from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer, QuestionType
 from community.paginations import CommunityPagination
 from community.permissions import IsOwnerOrReadOnly
 from community.serializers.serializers import PostListSerializer, PostDetailSerializer, PostCommentListSerializer, \
     PostCommentDetailSerializer, ReviewCommentDetailSerializer, ReviewCommentListSerializer, ReviewListSerializer, \
     ReviewDetailSerializer, NoticeListSerializer, NoticeDetailSerializer, QuestionListSerializer, \
-    QuestionDetailSerializer, AnswerDetailSerializer, AnswerListSerializer
+    QuestionDetailSerializer, AnswerDetailSerializer, AnswerListSerializer, QuestionTypeSerializer
 
 
 class CommonViewSet(ModelViewSet):
@@ -72,6 +72,7 @@ class ChildViewSet(NestedViewSetMixin, CommonViewSet):
         }
         serializer.save(**values)
 
+
 # ===============================================================
 
 class PostViewSet(CommonViewSet):
@@ -113,7 +114,7 @@ class ReviewViewSet(CommonViewSet):
 
     model = Review
 
-    search_fields = CommonViewSet.search_fields + ('title',)
+    search_fields = CommonViewSet.search_fields
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
             url_path='add-like', url_name='add-like')
@@ -170,3 +171,17 @@ class AnswerViewSet(ChildViewSet):
     model = Answer
 
     search_fields = CommonViewSet.search_fields + ('title',)
+
+
+# ---------------------------------------------------------------
+
+class QuestionTypeViewSet(ReadOnlyModelViewSet):
+    """
+    Question의 질문 종류
+
+    - ReadOnly / Admin 페이지에서 관리(Create, Update, Delete)
+    - 페이징 없음
+    - id 순으로 정렬
+    """
+    queryset = QuestionType.objects.all().order_by('id')
+    serializer_class = QuestionTypeSerializer

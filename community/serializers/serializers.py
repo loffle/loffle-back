@@ -1,6 +1,7 @@
 from rest_framework.relations import HyperlinkedIdentityField
+from rest_framework.serializers import ModelSerializer
 
-from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer
+from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer, QuestionType
 from community.serializers.custom.serializers import CommonSerializer, LikeField, CommentField, AnswerField
 
 from community.serializers.custom.url_fields import CommentListUrlField, CommentDetailUrlField
@@ -149,3 +150,11 @@ class QuestionDetailSerializer(CommonSerializer, AnswerField):
         model = Question
         exclude = EXCLUDE
         read_only_fields = READ_ONLY_FIELDS
+
+
+# -----------------------------------------------------------------
+
+class QuestionTypeSerializer(ModelSerializer):
+    class Meta:
+        model = QuestionType
+        fields = '__all__'
