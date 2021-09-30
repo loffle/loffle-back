@@ -113,7 +113,7 @@ class ReviewViewSet(CommonViewSet):
 
     model = Review
 
-    search_fields = CommonViewSet.search_fields + ('title',)
+    search_fields = CommonViewSet.search_fields
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
             url_path='add-like', url_name='add-like')
