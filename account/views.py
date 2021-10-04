@@ -90,3 +90,27 @@ class ActivateView(APIView):
         user.is_active = True
         user.save()
         return Response(status=HTTP_200_OK)
+
+
+class CheckUserView(APIView):
+    """
+    사용자 정보 검증
+    - email
+    - username
+    - phone
+    """
+
+    def post(self, request):
+        result = {}
+
+        check_list = ['email', 'username', 'phone']
+
+        for col in check_list:
+            value = request.POST.get(col, '')
+            if value:
+                result[col + '_exist'] = User.objects.filter(**{col: value}).exists()
+
+        if not result:
+            return Response({'detail': f'{check_list}중 적어도 하나의 값이 필요합니다.'}, status=HTTP_400_BAD_REQUEST)
+
+        return Response(result, status=HTTP_200_OK)
