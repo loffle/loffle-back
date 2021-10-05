@@ -47,9 +47,6 @@ class SignUpView(CreateAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        # 유저 저장(is_active=False)
-        result = super().post(request, *args, **kwargs)
-
         # 이메일 전송
         user = User.objects.get(email=request.data['email'])
         url_kwargs = {
@@ -64,6 +61,10 @@ class SignUpView(CreateAPIView):
 
         email = EmailMessage(subject, message, to=[user.email])
         email.send()
+
+        # 유저 저장(is_active=False)
+        result = super().post(request, *args, **kwargs)
+
         return result
 
 
