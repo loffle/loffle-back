@@ -20,17 +20,31 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.response import Response
 from rest_framework.routers import DefaultRouter
+from rest_framework.views import APIView
 
 import community.urls
 
-router = DefaultRouter()
-router.registry.extend(community.urls.router.registry)
+# router = DefaultRouter()
+# router.registry.extend(community.urls.router.registry)
+
+class LoffleAPIRootView(APIView):
+    """
+    로플의 API Root
+    """
+    def get(self, request, *args, **kwargs):
+        api = {'community': request.build_absolute_uri('community/'),
+               # 'account': request.build_absolute_uri('account/'),
+               }
+        return Response(api)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', LoffleAPIRootView.as_view()),
+    # path('', include(router.urls)),
     path('community', include('community.urls'), name='community'),
     path('account', include('account.urls'), name='account'),
+    path('loffle', include('loffle.urls'), name='loffle'),
 
     path('admin/', admin.site.urls),
 

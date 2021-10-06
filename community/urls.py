@@ -28,10 +28,10 @@ router.register('question', QuestionViewSet, basename='question') \
                           AnswerViewSet,
                           basename='answer',
                           parents_query_lookups=('question',))
-router.register('questiontype', QuestionTypeViewSet, basename='questiontype') \
+router.register('questiontype', QuestionTypeViewSet, basename='questiontype')
 
-
-router.include_root_view = False
+router.get_api_root_view().cls.__name__ = 'Community API'
+router.get_api_root_view().cls.__doc__ = '로플의 커뮤니티 API'
 
 urlpatterns = [
     path('/', include(router.urls)),
