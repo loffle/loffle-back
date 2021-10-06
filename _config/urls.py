@@ -29,18 +29,19 @@ import community.urls
 # router = DefaultRouter()
 # router.registry.extend(community.urls.router.registry)
 
-class LoffleAPIRootView(APIView):
+class LoffleBackendAPIRootView(APIView):
     """
-    로플의 API Root
+    로플의 백엔드 API Root
     """
     def get(self, request, *args, **kwargs):
         api = {'community': request.build_absolute_uri('community/'),
                # 'account': request.build_absolute_uri('account/'),
+               'loffle': request.build_absolute_uri('loffle/'),
                }
         return Response(api)
 
 urlpatterns = [
-    path('', LoffleAPIRootView.as_view()),
+    path('', LoffleBackendAPIRootView.as_view()),
     # path('', include(router.urls)),
     path('community', include('community.urls'), name='community'),
     path('account', include('account.urls'), name='account'),
