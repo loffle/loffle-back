@@ -23,6 +23,7 @@ class Ticket(models.Model):
     buy = models.ManyToManyField(
         User,
         related_name='tickets',
+        blank=True,
     )
 
 
