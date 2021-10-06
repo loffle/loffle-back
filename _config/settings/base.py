@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     'community.apps.CommunityConfig',
     'account.apps.AccountConfig',
+    'loffle.apps.LoffleConfig',
     # 'file.apps.FileConfig',
 ]
 
