@@ -66,8 +66,6 @@ class SignUpView(CreateAPIView):
         email = EmailMessage(subject, message, to=[user.email])
         email.send()
 
-
-
         return result
 
 
@@ -96,25 +94,25 @@ class ActivateView(APIView):
         return Response(status=HTTP_200_OK)
 
 
-class CheckUserView(APIView):
+class CheckUserInfoView(APIView):
     """
-    사용자 정보 검증
+    사용자 정보 중복 확인
     - email
     - username
     - phone
     """
 
-    def post(self, request):
+    def post(self, request, info):
         result = {}
-
         check_list = ['email', 'username', 'phone']
+        if info not in check_list:
+            return Response({'detail': '존재하지 않는 요청입니다.'}, status=HTTP_404_NOT_FOUND)
 
-        for col in check_list:
-            value = request.POST.get(col, '')
-            if value:
-                result[col + '_exist'] = User.objects.filter(**{col: value}).exists()
+        value = request.POST.get(info, '')
+        if value:
+            result[info + '_exist'] = User.objects.filter(**{info: value}).exists()
 
         if not result:
-            return Response({'detail': f'{check_list}중 적어도 하나의 값이 필요합니다.'}, status=HTTP_400_BAD_REQUEST)
+            return Response({'detail': f'{info} 값이 필요합니다.'}, status=HTTP_400_BAD_REQUEST)
 
         return Response(result, status=HTTP_200_OK)
