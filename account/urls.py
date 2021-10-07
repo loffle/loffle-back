@@ -1,8 +1,26 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import APIRootView
+from rest_framework_extensions.routers import ExtendedDefaultRouter
 
-from account.views import LoginView, SignUpView, LogoutView, ActivateView, CheckUserInfoView
+from account.views import LoginView, SignUpView, LogoutView, ActivateView, CheckUserInfoView, UserViewSet
+
+
+class AccountAPI(APIRootView):
+    """
+    로플의 계정 API
+    """
+    pass
+
+
+router = ExtendedDefaultRouter(trailing_slash=False)
+router.APIRootView = AccountAPI
+
+router.register('user', UserViewSet, basename='user')
+
 
 urlpatterns = [
+    path('/', include(router.urls)),
+
     path('/login', LoginView.as_view(), name='login'),
     path('/logout', LogoutView.as_view(), name='logout'),
     path('/signup', SignUpView.as_view(), name='signup'),
