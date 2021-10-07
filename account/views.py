@@ -1,20 +1,46 @@
 from django.contrib.auth import user_logged_in
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import EmailMessage
+from django.db.models import Sum
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
+from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 
 from account.models import User
+from account.permissions import IsOwner
 from account.serializers import UserSerializer
+
+
+class UserViewSet(RetrieveModelMixin,
+                  GenericViewSet):
+    permission_classes = [IsOwner]
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    @action(methods=('get',), detail=True, permission_classes=(IsOwner,),
+            url_path='ticket', url_name='get-tickets')
+    def get_tickets(self, request, **kwargs):
+        obj = self.get_object()
+
+        # 티켓의 수량 가져오기
+        # TODO: 응모 테이블의 개수를 더해서 빼주기
+        result = User.objects.get(pk=4)\
+            .buy_tickets\
+            .select_related('ticket')\
+            .aggregate(num_of_tickets=Sum('ticket__quantity'))
+        return Response(result, status=HTTP_200_OK)
 
 
 class LoginView(ObtainAuthToken):
