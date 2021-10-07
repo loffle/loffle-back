@@ -20,11 +20,29 @@ class Ticket(models.Model):
     price = models.PositiveBigIntegerField(
         verbose_name='가격'
     )
-    buy = models.ManyToManyField(
-        User,
-        related_name='tickets',
-        blank=True,
+
+
+class TicketBuy(models.Model):
+    ticket = models.ForeignKey(
+        Ticket,
+        related_name='buy_tickets',
+        on_delete=models.RESTRICT,
     )
+    user = models.ForeignKey(
+        User,
+        related_name='buy_tickets',
+        on_delete=models.CASCADE,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False, editable=False)
+
+    objects = CommonManager()
+    deleted_objects = CommonManager(is_deleted=True)
+
+    class Meta:
+        db_table = '_'.join((__package__, 'ticket_buy'))
 
 
 class Product(models.Model):

@@ -1,11 +1,12 @@
+from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer
 
 from loffle.models import Ticket
 
 
 class TicketSerializer(ModelSerializer):
+    url = HyperlinkedIdentityField(view_name='ticket-detail')
 
     class Meta:
         model = Ticket
-        exclude = ('buy',)
-        # read_only_fields = ('buy',)
+        fields = '__all__'
