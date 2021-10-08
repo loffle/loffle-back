@@ -36,7 +36,7 @@ class UserViewSet(RetrieveModelMixin,
 
         # 티켓의 수량 가져오기
         # TODO: 응모 테이블의 개수를 더해서 빼주기
-        result = User.objects.get(pk=4)\
+        result = User.objects.get(pk=request.user.pk)\
             .buy_tickets\
             .select_related('ticket')\
             .aggregate(num_of_tickets=Sum('ticket__quantity'))
@@ -55,6 +55,7 @@ class LoginView(ObtainAuthToken):
         return Response({
             'token': token.key,
             'nickname': user.username,
+            'id': user.id,
         })
 
 

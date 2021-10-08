@@ -15,7 +15,7 @@ class LoffleAPI(APIRootView):
 router = ExtendedDefaultRouter(trailing_slash=False)
 router.APIRootView = LoffleAPI
 
-router.register('ticket', TicketViewSet, basename='ticket')
+router.register('tickets', TicketViewSet, basename='tickets')
 
 urlpatterns = [
     path('/', include(router.urls)),

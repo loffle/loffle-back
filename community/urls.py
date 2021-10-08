@@ -17,23 +17,23 @@ class CommunityAPI(APIRootView):
 router = ExtendedDefaultRouter(trailing_slash=False)
 router.APIRootView = CommunityAPI
 
-router.register('post', PostViewSet, basename='post') \
-    .register('comment',
+router.register('posts', PostViewSet, basename='posts') \
+    .register('comments',
               PostCommentViewSet,
-              basename='post-comment',
+              basename='post-comments',
               parents_query_lookups=('post',))
-router.register('review', ReviewViewSet, basename='review') \
-    .register('comment',
+router.register('reviews', ReviewViewSet, basename='reviews') \
+    .register('comments',
               ReviewCommentViewSet,
-              basename='review-comment',
+              basename='review-comments',
               parents_query_lookups=('review',))
-router.register('notice', NoticeViewSet, basename='notice')
-router.register('question', QuestionViewSet, basename='question') \
-    .register('answer',
+router.register('notices', NoticeViewSet, basename='notices')
+router.register('questions', QuestionViewSet, basename='questions') \
+    .register('answers',
               AnswerViewSet,
-              basename='answer',
+              basename='answers',
               parents_query_lookups=('question',))
-router.register('questiontype', QuestionTypeViewSet, basename='questiontype')
+router.register('question-types', QuestionTypeViewSet, basename='question-types')
 
 urlpatterns = [
     path('/', include(router.urls)),
