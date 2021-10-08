@@ -55,6 +55,7 @@ class LoginView(ObtainAuthToken):
         return Response({
             'token': token.key,
             'nickname': user.username,
+            'id': user.id,
         })
 
 
