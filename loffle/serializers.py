@@ -5,7 +5,7 @@ from loffle.models import Ticket
 
 
 class TicketSerializer(ModelSerializer):
-    url = HyperlinkedIdentityField(view_name='ticket-detail')
+    url = HyperlinkedIdentityField(view_name='tickets-detail')
 
     class Meta:
         model = Ticket
