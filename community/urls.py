@@ -21,7 +21,7 @@ router.register('posts', PostViewSet, basename='posts') \
     .register('comments',
               PostCommentViewSet,
               basename='post-comments',
-              parents_query_lookups=('posts',))
+              parents_query_lookups=('post',))
 router.register('reviews', ReviewViewSet, basename='reviews') \
     .register('comments',
               ReviewCommentViewSet,
