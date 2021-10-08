@@ -86,7 +86,7 @@ class PostViewSet(CommonViewSet):
     search_fields = CommonViewSet.search_fields + ('title',)
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='add-like', url_name='add-like')
+            url_path='like', url_name='add-like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
@@ -101,7 +101,7 @@ class PostCommentViewSet(ChildViewSet):
     model = PostComment
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='add-like', url_name='add-like')
+            url_path='like', url_name='add-like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
@@ -117,7 +117,7 @@ class ReviewViewSet(CommonViewSet):
     search_fields = CommonViewSet.search_fields
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='add-like', url_name='add-like')
+            url_path='like', url_name='add-like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
@@ -132,7 +132,7 @@ class ReviewCommentViewSet(ChildViewSet):
     model = ReviewComment
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='add-like', url_name='add-like')
+            url_path='like', url_name='add-like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
