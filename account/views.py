@@ -2,6 +2,7 @@ from django.contrib.auth import user_logged_in
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import EmailMessage
 from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
@@ -39,7 +40,7 @@ class UserViewSet(RetrieveModelMixin,
         result = User.objects.get(pk=request.user.pk)\
             .buy_tickets\
             .select_related('ticket')\
-            .aggregate(num_of_tickets=Sum('ticket__quantity'))
+            .aggregate(num_of_tickets=Coalesce(Sum('ticket__quantity'), 0))
         return Response(result, status=HTTP_200_OK)
 
 
