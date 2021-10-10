@@ -2,9 +2,8 @@ from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer
 
 from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer, QuestionType
-from community.serializers.custom.serializers import CommonSerializer, LikeField, CommentField, AnswerField
-
-from community.serializers.custom.url_fields import CommentListUrlField, CommentDetailUrlField
+from community.serializers.custom.fields import LikeField, CommentField, AnswerField, CommentListUrlField, \
+    CommentDetailUrlField
 
 EXCLUDE = ('is_deleted',)
 READ_ONLY_FIELDS = ('user',)
@@ -14,6 +13,17 @@ POST_ROF = READ_ONLY_FIELDS + ('like',)
 REVIEW_COMMENT_ROF = READ_ONLY_FIELDS + ('review', 'like',)
 REVIEW_ROF = READ_ONLY_FIELDS + ('like',)
 ANSWER_ROF = READ_ONLY_FIELDS + ('question',)
+
+
+class CommonSerializer(ModelSerializer):
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if 'user' in ret:
+            ret['user'] = instance.user.username
+        if 'question_type' in ret:
+            ret['question_type'] = instance.question_type.name
+        return ret
 
 
 # =======================================
