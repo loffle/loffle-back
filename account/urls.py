@@ -15,7 +15,7 @@ class AccountAPI(APIRootView):
 router = ExtendedDefaultRouter(trailing_slash=False)
 router.APIRootView = AccountAPI
 
-router.register('users', UserViewSet, basename='users')
+router.register('users', UserViewSet, basename='user')
 
 
 urlpatterns = [
