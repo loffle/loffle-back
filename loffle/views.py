@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework.viewsets import ModelViewSet
 
-from loffle.models import Ticket, TicketBuy, Product
+from loffle.models import Ticket, TicketBuy, Product, Raffle
 from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
-from loffle.serializers import TicketSerializer, ProductSerializer
+from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer
 
 
 class TicketViewSet(ModelViewSet):
@@ -27,12 +27,7 @@ class TicketViewSet(ModelViewSet):
         return Response({'detail': '티켓 구매 성공✅'}, status=HTTP_201_CREATED)
 
 
-class ProductViewSet(ModelViewSet):
-    permission_classes = [IsStaffOrReadOnly]  # Only Staff
-
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-
+class CommonViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
@@ -41,3 +36,23 @@ class ProductViewSet(ModelViewSet):
         obj.is_deleted = True
         obj.save()
         return Response(status=HTTP_204_NO_CONTENT)
+
+
+class ProductViewSet(CommonViewSet):
+    permission_classes = [IsStaffOrReadOnly]  # Only Staff
+
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+class RaffleViewSet(CommonViewSet):
+    permission_classes = [IsStaffOrReadOnly]  # Only Staff
+
+    queryset = Raffle.objects.all()
+    serializer_class = RaffleSerializer
+
+    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,),
+            url_path='apply', url_name='apply-raffle')
+    def apply_raffle(self, request, **kwargs):
+        pass
+        # 이미 응모한 사람은 응모 못하게 막기
