@@ -112,6 +112,31 @@ class Raffle(models.Model):
     deleted_objects = CommonManager(is_deleted=True)
 
 
+class RaffleApply(models.Model):
+    raffle = models.ForeignKey(
+        Raffle,
+        verbose_name='응모한 래플',
+        related_name='applied',
+        on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        User,
+        verbose_name='응모한 사람',
+        related_name='applied_raffles',
+        on_delete=models.CASCADE
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False, editable=False)
+
+    objects = CommonManager()
+    deleted_objects = CommonManager(is_deleted=True)
+
+    class Meta:
+        db_table = '_'.join((__package__, 'raffle_apply'))
+
+
 class RaffleCandidate(models.Model):
     raffle = models.ForeignKey(Raffle,
                                verbose_name='래플',

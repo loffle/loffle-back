@@ -2,10 +2,10 @@ from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
+from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
 from rest_framework.viewsets import ModelViewSet
 
-from loffle.models import Ticket, TicketBuy, Product, Raffle
+from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply
 from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
 from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer
 
@@ -54,5 +54,12 @@ class RaffleViewSet(CommonViewSet):
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,),
             url_path='apply', url_name='apply-raffle')
     def apply_raffle(self, request, **kwargs):
-        pass
-        # 이미 응모한 사람은 응모 못하게 막기
+        obj = self.get_object()
+        if obj.applied.filter(user__pk=request.user.pk).exists():
+            return Response({'detail': '이미 응모한 래플입니다.'}, status=HTTP_409_CONFLICT)
+        else:
+            RaffleApply.objects.create(
+                raffle=obj,
+                user=request.user,
+            )
+            return Response({'detail': '래플 응모 성공✅'}, status=HTTP_201_CREATED)
