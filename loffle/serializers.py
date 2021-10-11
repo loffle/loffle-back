@@ -1,3 +1,4 @@
+from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField, HyperlinkedRelatedField
 from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
 
@@ -45,6 +46,9 @@ class RaffleSerializer(CommonSerializer):
     user = StringRelatedField()
     # product = ProductSerializer(read_only=True)
 
+    apply_count = SerializerMethodField()
+    apply_or_not = SerializerMethodField()
+
     # 래플 진행 상태
     # 응모 여부 apply_or_not
     # 응모한 사람 카운트 apply_count
@@ -53,3 +57,10 @@ class RaffleSerializer(CommonSerializer):
         model = Raffle
         exclude = ('is_deleted',)
         read_only_fields = ('user',)
+
+    @staticmethod
+    def get_apply_count(obj):
+        return obj.applied.count()
+
+    def get_apply_or_not(self, obj):
+        return obj.applied.filter(user__pk=self.context['request'].user.pk).exists()
