@@ -21,6 +21,7 @@ from rest_framework.viewsets import GenericViewSet
 from account.models import User
 from account.permissions import IsOwner
 from account.serializers import UserSerializer
+from loffle.models import RaffleApply
 
 
 class UserViewSet(RetrieveModelMixin,
@@ -36,11 +37,10 @@ class UserViewSet(RetrieveModelMixin,
         obj = self.get_object()
 
         # 티켓의 수량 가져오기
-        # TODO: 응모 테이블의 개수를 더해서 빼주기
-        result = obj\
-            .buy_tickets\
-            .select_related('ticket')\
-            .aggregate(num_of_tickets=Coalesce(Sum('ticket__quantity'), 0))
+        result = {
+            'num_of_tickets':
+                obj.buy_tickets.select_related('ticket').aggregate(buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
+                    'buy_tickets'] - RaffleApply.objects.filter(user_id=obj.pk).count()}
         return Response(result, status=HTTP_200_OK)
 
 

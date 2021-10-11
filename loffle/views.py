@@ -1,3 +1,5 @@
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
@@ -55,8 +57,13 @@ class RaffleViewSet(CommonViewSet):
             url_path='apply', url_name='apply-raffle')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
+        # 응모 여부 검사
         if obj.applied.filter(user__pk=request.user.pk).exists():
             return Response({'detail': '이미 응모한 래플입니다.'}, status=HTTP_409_CONFLICT)
+        # 티켓 소유 검사
+        elif request.user.buy_tickets.select_related('ticket').aggregate(buy_tickets=Sum('ticket__quantity'))[
+                                  'buy_tickets'] - RaffleApply.objects.filter(user_id=request.user.pk).count() <= 0:
+            return Response({'detail': '소유한 티켓이 없습니다.'})
         else:
             RaffleApply.objects.create(
                 raffle=obj,
