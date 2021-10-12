@@ -2,14 +2,16 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from account.models import User
 from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply
+from loffle.paginations import ApplyUserPagination
 from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
-from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer
+from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplyUserSerializer
 
 
 class TicketViewSet(ModelViewSet):
@@ -61,8 +63,10 @@ class RaffleViewSet(CommonViewSet):
         if obj.applied.filter(user__pk=request.user.pk).exists():
             return Response({'detail': '이미 응모한 래플입니다.'}, status=HTTP_409_CONFLICT)
         # 티켓 소유 검사
-        elif request.user.buy_tickets.select_related('ticket').aggregate(buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
-                                  'buy_tickets'] - RaffleApply.objects.filter(user_id=request.user.pk).count() <= 0:
+        elif \
+                request.user.buy_tickets.select_related('ticket').aggregate(
+                    buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
+                    'buy_tickets'] - RaffleApply.objects.filter(user_id=request.user.pk).count() <= 0:
             return Response({'detail': '소유한 티켓이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
         else:
             RaffleApply.objects.create(
@@ -70,3 +74,12 @@ class RaffleViewSet(CommonViewSet):
                 user=request.user,
             )
             return Response({'detail': '래플 응모 성공✅'}, status=HTTP_201_CREATED)
+
+
+class ApplyUserViewSet(ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+    pagination_class = ApplyUserPagination
+    serializer_class = ApplyUserSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(applied_raffles__raffle_id=1).order_by('applied_raffles__created_at')

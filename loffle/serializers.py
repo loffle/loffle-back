@@ -1,7 +1,8 @@
 from rest_framework.fields import SerializerMethodField
-from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField, HyperlinkedRelatedField
-from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
+from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField
+from rest_framework.serializers import ModelSerializer
 
+from account.models import User
 from loffle.models import Ticket, Product, Raffle
 
 
@@ -64,3 +65,9 @@ class RaffleSerializer(CommonSerializer):
 
     def get_apply_or_not(self, obj):
         return obj.applied.filter(user__pk=self.context['request'].user.pk).exists()
+
+
+class ApplyUserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username',)
