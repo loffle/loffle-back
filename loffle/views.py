@@ -88,7 +88,7 @@ class RaffleViewSet(CommonViewSet):
                 raffle=obj,
                 user=request.user,
             )
-            return Response({'detail': '래플 응모 성공✅'}, status=HTTP_201_CREATED)
+            return Response({'detail': '래플 응모 성공✅', }, status=HTTP_201_CREATED)
 
 
 class ApplyUserViewSet(ReadOnlyModelViewSet):
@@ -97,4 +97,5 @@ class ApplyUserViewSet(ReadOnlyModelViewSet):
     serializer_class = ApplyUserSerializer
 
     def get_queryset(self):
-        return User.objects.filter(applied_raffles__raffle_id=1).order_by('applied_raffles__created_at')
+        return User.objects.filter(
+            applied_raffles__raffle_id=self.kwargs['parent_lookup_raffle']).order_by('applied_raffles__created_at')

@@ -1,5 +1,5 @@
-from rest_framework.fields import SerializerMethodField
-from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField
+from rest_framework.fields import SerializerMethodField, DateTimeField
+from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField, HyperlinkedRelatedField
 from rest_framework.serializers import ModelSerializer
 
 from account.models import User
@@ -45,7 +45,8 @@ class ProductSerializer(CommonSerializer):
 class RaffleSerializer(CommonSerializer):
     url = HyperlinkedIdentityField(view_name='raffle-detail')
     user = StringRelatedField()
-    # product = ProductSerializer(read_only=True)
+    # product = HyperlinkedRelatedField(view_name='product-detail', read_only=True)
+    # product = HyperlinkedRelatedField(view_name='product-detail', read_only=True, lookup_field='product_id')
 
     apply_count = SerializerMethodField()
     apply_or_not = SerializerMethodField()
@@ -68,6 +69,12 @@ class RaffleSerializer(CommonSerializer):
 
 
 class ApplyUserSerializer(ModelSerializer):
+    apply_at = SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('username',)
+        fields = ('username', 'apply_at',)
+
+    def get_apply_at(self, obj):
+        raffle_id = self.context['view'].kwargs['parent_lookup_raffle']
+        return DateTimeField().to_representation(obj.applied_raffles.get(raffle_id=raffle_id, user_id=obj.id).created_at)
