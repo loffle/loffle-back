@@ -1,5 +1,6 @@
 from rest_framework.fields import SerializerMethodField, DateTimeField
-from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField, HyperlinkedRelatedField
+from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField, HyperlinkedRelatedField, \
+    PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
 from account.models import User
@@ -42,18 +43,23 @@ class ProductSerializer(CommonSerializer):
 # TODO: user -> String 필드 사용하기
 # TODO: list detail에 따라서 다시 코드 정리
 
+class RaffleProductSerializer(ModelSerializer):
+    url = HyperlinkedIdentityField(view_name='product-detail')
+
+    class Meta:
+        model = Product
+        fields = ('id', 'name', 'brand', 'url',)
+
+
 class RaffleSerializer(CommonSerializer):
     url = HyperlinkedIdentityField(view_name='raffle-detail')
     user = StringRelatedField()
-    # product = HyperlinkedRelatedField(view_name='product-detail', read_only=True)
-    # product = HyperlinkedRelatedField(view_name='product-detail', read_only=True, lookup_field='product_id')
+
+    product = PrimaryKeyRelatedField(label='연결된 제품', queryset=Product.objects.all(), write_only=True)
+    product_preview = RaffleProductSerializer(source='product', read_only=True)
 
     apply_count = SerializerMethodField()
     apply_or_not = SerializerMethodField()
-
-    # 래플 진행 상태
-    # 응모 여부 apply_or_not
-    # 응모한 사람 카운트 apply_count
 
     class Meta:
         model = Raffle

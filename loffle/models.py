@@ -80,6 +80,9 @@ class Product(models.Model):
     objects = CommonManager()
     deleted_objects = CommonManager(is_deleted=True)
 
+    def __str__(self):
+        return f"{self.name} | {self.brand} | {self.color} | {self.size}"
+
 
 class Raffle(models.Model):
     begin_at = models.DateTimeField(
