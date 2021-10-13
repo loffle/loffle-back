@@ -31,18 +31,6 @@ class UserViewSet(RetrieveModelMixin,
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    @action(methods=('get',), detail=True, permission_classes=(IsOwner,),
-            url_path='ticket', url_name='get-ticket')
-    def get_ticket(self, request, **kwargs):
-        obj = self.get_object()
-
-        # 티켓의 수량 가져오기
-        result = {
-            'num_of_tickets':
-                obj.buy_tickets.select_related('ticket').aggregate(buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
-                    'buy_tickets'] - RaffleApply.objects.filter(user_id=obj.pk).count()}
-        return Response(result, status=HTTP_200_OK)
-
 
 class LoginView(ObtainAuthToken):
     def post(self, request, *args, **kwargs):

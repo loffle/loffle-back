@@ -2,14 +2,15 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, \
+    HTTP_200_OK
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from account.models import User
 from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply
-from loffle.paginations import ApplyUserPagination
+from loffle.paginations import ApplyUserPagination, RafflePagination
 from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
 from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplyUserSerializer
 
@@ -29,6 +30,19 @@ class TicketViewSet(ModelViewSet):
             user=request.user,
         )
         return Response({'detail': '티켓 구매 성공✅'}, status=HTTP_201_CREATED)
+
+    @action(methods=('get',), detail=False, permission_classes=(IsAuthenticated,),
+            url_path='my-ticket', url_name='my-ticket')
+    def get_ticket(self, request, **kwargs):
+        # obj = self.get_object()
+        user = request.user
+
+        # 티켓의 수량 가져오기
+        result = {
+            'num_of_tickets':
+                user.buy_tickets.select_related('ticket').aggregate(buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
+                    'buy_tickets'] - RaffleApply.objects.filter(user_id=user.pk).count()}
+        return Response(result, status=HTTP_200_OK)
 
 
 class CommonViewSet(ModelViewSet):
