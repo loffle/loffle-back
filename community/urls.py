@@ -36,5 +36,5 @@ router.register('questions', QuestionViewSet, basename='question') \
 router.register('question-types', QuestionTypeViewSet, basename='question-type')
 
 urlpatterns = [
-    path('/', include(router.urls)),
+    path('', include(router.urls)),
 ]

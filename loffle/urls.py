@@ -24,5 +24,5 @@ router.register('raffles', RaffleViewSet, basename='raffle') \
               parents_query_lookups=('raffle',))
 
 urlpatterns = [
-    path('/', include(router.urls)),
+    path('', include(router.urls)),
 ]
