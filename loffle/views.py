@@ -78,17 +78,18 @@ class RaffleViewSet(CommonViewSet):
         if obj.applied.filter(user__pk=request.user.pk).exists():
             return Response({'detail': '이미 응모한 래플입니다.'}, status=HTTP_409_CONFLICT)
         # 티켓 소유 검사
-        elif \
-                request.user.buy_tickets.select_related('ticket').aggregate(
-                    buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
-                    'buy_tickets'] - RaffleApply.objects.filter(user_id=request.user.pk).count() <= 0:
+        elif request.user.buy_tickets.select_related('ticket').aggregate(
+                buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
+            'buy_tickets'] - RaffleApply.objects.filter(user_id=request.user.pk).count() <= 0:
             return Response({'detail': '소유한 티켓이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
         else:
-            RaffleApply.objects.create(
+            ra = RaffleApply.objects.create(
                 raffle=obj,
                 user=request.user,
             )
-            return Response({'detail': '래플 응모 성공✅', }, status=HTTP_201_CREATED)
+            ordinal_number = RaffleApply.objects.filter(raffle_id=ra.raffle_id,
+                                                        created_at__lt=ra.created_at).count() + 1
+            return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
 
 
 class ApplyUserViewSet(ReadOnlyModelViewSet):

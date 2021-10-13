@@ -83,4 +83,5 @@ class ApplyUserSerializer(ModelSerializer):
 
     def get_apply_at(self, obj):
         raffle_id = self.context['view'].kwargs['parent_lookup_raffle']
-        return DateTimeField().to_representation(obj.applied_raffles.get(raffle_id=raffle_id, user_id=obj.id).created_at)
+        return DateTimeField().to_representation(
+            obj.applied_raffles.get(raffle_id=raffle_id, user_id=obj.id).created_at)
