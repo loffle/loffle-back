@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.timezone import now
 
 from account.models import User
 
@@ -84,6 +85,23 @@ class Product(models.Model):
         return f"{self.name} | {self.brand} | {self.color} | {self.size}"
 
 
+# class RaffleProgress(models.Model):
+#     name = models.CharField(
+#         verbose_name='진행 상황',
+#         max_length=10,
+#         choices=(
+#             ('waiting', '응모 대기'),
+#             ('ongoing', '응모 진행중'),
+#             ('done', '응모 종료'),
+#             ('failed', '응모 실패'),
+#         ),
+#         default='waiting',
+#     )
+#
+#     class Meta:
+#         db_table = '_'.join((__package__, 'raffle_progress'))
+
+
 class Raffle(models.Model):
     begin_at = models.DateTimeField(
         verbose_name='응모 시작 날짜',
@@ -91,6 +109,9 @@ class Raffle(models.Model):
     finish_at = models.DateTimeField(
         verbose_name='응모 종료 날짜',
     )
+    # announce_at = models.DateTimeField(
+    #     verbose_name='당첨 발표 날짜',
+    # )
     target_quantity = models.PositiveIntegerField(
         verbose_name='목표 티켓 수량',
     )
@@ -107,12 +128,23 @@ class Raffle(models.Model):
                                 on_delete=models.CASCADE
                                 )
 
+    # progress = models.ForeignKey(RaffleProgress,
+    #                              verbose_name='진행 상황',
+    #                              related_name='raffles',
+    #                              on_delete=models.PROTECT,
+    #                              default=1
+    #                              )
+
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, editable=False)
 
     objects = CommonManager()
     deleted_objects = CommonManager(is_deleted=True)
+
+    def get_announce_at(self):
+
+        return
 
 
 class RaffleApply(models.Model):
