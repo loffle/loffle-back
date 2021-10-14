@@ -171,6 +171,8 @@ class RaffleApply(models.Model):
     class Meta:
         db_table = '_'.join((__package__, 'raffle_apply'))
 
+    def __str__(self):
+        return f'RaffleApply ({self.pk}) | {self.raffle} | {self.user}'
 
 class RaffleCandidate(models.Model):
     raffle = models.ForeignKey(Raffle,
