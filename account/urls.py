@@ -21,10 +21,10 @@ router.register('users', UserViewSet, basename='user')
 urlpatterns = [
     path('', include(router.urls)),
 
-    path('/login', LoginView.as_view(), name='login'),
-    path('/logout', LogoutView.as_view(), name='logout'),
-    path('/signup', SignUpView.as_view(), name='signup'),
+    path('login', LoginView.as_view(), name='login'),
+    path('logout', LogoutView.as_view(), name='logout'),
+    path('signup', SignUpView.as_view(), name='signup'),
 
-    path('/activate/<str:uidb64>/<str:token>', ActivateView.as_view(), name='activate'),
-    path('/check-<str:info>', CheckUserInfoView.as_view(), name='check-user-info'),
+    path('activate/<str:uidb64>/<str:token>', ActivateView.as_view(), name='activate'),
+    path('check-<str:info>', CheckUserInfoView.as_view(), name='check-user-info'),
 ]

@@ -13,7 +13,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include, re_path
 from drf_yasg import openapi
@@ -35,20 +34,18 @@ class LoffleBackendAPIRootView(APIRootView):
     pass
 
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 router.APIRootView = LoffleBackendAPIRootView
 
 router.registry.extend(community.urls.router.registry)
 router.registry.extend(account.urls.router.registry)
 router.registry.extend(loffle.urls.router.registry)
 
-
 urlpatterns = [
-    # path('', LoffleBackendAPIRootView.as_view()),
     path('', include(router.urls)),
-    path('', include('community.urls'), name='community'),
-    path('', include('account.urls'), name='account'),
-    path('', include('loffle.urls'), name='loffle'),
+    # path('', include('community.urls'), name='community'),
+    # path('', include('account.urls'), name='account'),
+    # path('', include('loffle.urls'), name='loffle'),
 
     path('admin/', admin.site.urls),
 
@@ -66,7 +63,7 @@ schema_view = get_schema_view(
         license=openapi.License(name="MIT License"),
     ),
     public=True,
-    permission_classes=[permissions.AllowAny],
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns += [
