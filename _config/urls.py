@@ -44,7 +44,7 @@ router.registry.extend(loffle.urls.router.registry)
 urlpatterns = [
     path('', include(router.urls)),
     # path('', include('community.urls'), name='community'),
-    # path('', include('account.urls'), name='account'),
+    path('', include('account.urls'), name='account'),
     # path('', include('loffle.urls'), name='loffle'),
 
     path('admin/', admin.site.urls),
