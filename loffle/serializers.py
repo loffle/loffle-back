@@ -76,12 +76,28 @@ class RaffleSerializer(CommonSerializer):
 
 class ApplyUserSerializer(ModelSerializer):
     apply_at = SerializerMethodField()
+    row_number = SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('username', 'apply_at',)
+        fields = ('username', 'apply_at', 'row_number')
 
     def get_apply_at(self, obj):
         raffle_id = self.context['view'].kwargs['parent_lookup_raffle']
         return DateTimeField().to_representation(
             obj.applied_raffles.get(raffle_id=raffle_id, user_id=obj.id).created_at)
+
+    _row_number = 0
+
+    def get_row_number(self, obj):
+        page_size = self.context['view'].pagination_class.page_size
+
+        page_num = self.context['request'].query_params.get('page', None)
+        if isinstance(page_num, list) and len(page_num) > 1:
+            page_num = page_num[-1]
+
+        if page_num and self._row_number % page_size == 0:
+            self._row_number = int(page_size) * (int(page_num) - 1)
+
+        self._row_number += 1
+        return self._row_number
