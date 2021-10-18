@@ -4,6 +4,7 @@ from rest_framework.relations import HyperlinkedIdentityField, StringRelatedFiel
 from rest_framework.serializers import ModelSerializer
 
 from account.models import User
+from community.serializers.custom.fields import CommentListUrlField
 from loffle.models import Ticket, Product, Raffle
 
 
@@ -60,6 +61,7 @@ class RaffleSerializer(CommonSerializer):
 
     apply_count = SerializerMethodField()
     apply_or_not = SerializerMethodField()
+    apply_user_list_url = CommentListUrlField(view_name='apply-user-list')
 
     class Meta:
         model = Raffle
