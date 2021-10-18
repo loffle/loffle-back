@@ -94,7 +94,7 @@ class RaffleViewSet(CommonViewSet):
 
 class ApplyUserViewSet(ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
-    pagination_class = ApplyUserPagination
+    # pagination_class = ApplyUserPagination
     serializer_class = ApplyUserSerializer
 
     def get_queryset(self):
