@@ -57,7 +57,7 @@ class CommonViewSet(ModelViewSet):
 
 
 class ProductViewSet(CommonViewSet):
-    permission_classes = [IsStaffOrReadOnly]  # Only Staff
+    permission_classes = [IsStaffOrReadOnly]  # Only Staff # TODO: obj 권한은 owner만 줄 것!
 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
