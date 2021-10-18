@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from datetime import timedelta
 import pytz
 from django.db import models
 from django.utils import timezone
@@ -113,10 +112,10 @@ class Raffle(models.Model):
     end_date_time = models.DateTimeField(
         verbose_name='응모 종료 날짜',
     )
-    # announce_date_time = models.DateTimeField(
-    #     verbose_name='당첨 발표 날짜',
-    #     default=self.get_announce_at()
-    # )
+    announce_date_time = models.DateTimeField(
+        verbose_name='당첨 발표 날짜',
+        editable=False, blank=True,
+    )
     target_quantity = models.PositiveIntegerField(
         verbose_name='목표 티켓 수량',
     )
@@ -147,17 +146,28 @@ class Raffle(models.Model):
     objects = CommonManager()
     deleted_objects = CommonManager(is_deleted=True)
 
-    def get_announce_at(self):
+    def save(self, *args, **kwargs):
+        self.announce_date_time = self.get_announce_date_time()
+        return super().save(*args, **kwargs)
+
+    def get_announce_date_time(self):
+        KST = pytz.timezone('Asia/Seoul')
+        end_dt_utc = self.end_date_time  # datetime(tzinfo=<UTC>)
+        end_dt_kst = end_dt_utc.astimezone(KST)
+
+        # weekday() -> 0: Mon, 1: Tue, ..., 4: Fri, 5: Sat, 6: Sun
+        this_sat_dt = end_dt_kst + timedelta(days=5 - end_dt_kst.weekday())
+        this_sat_midnight_dt = this_sat_dt.replace(hour=0, minute=1)
 
         # 이번주 토요일 자정까지는 이번주 토요일 21:00
         #                이후는 다음주 토요일 09:00
-        this_sat_annouce_dt = this_sat_dt.replace(hour=21, minute=0)
-        next_sat_annouce_dt = this_sat_annouce_dt + datetime.timedelta(days=7)
+        this_sat_announce_dt = this_sat_dt.replace(hour=21, minute=0, second=0)
+        next_sat_announce_dt = this_sat_announce_dt + timedelta(days=7)
 
         if end_dt_kst < this_sat_midnight_dt:
-            return this_sat_dt.replace(hour=21, minute=0)
+            return this_sat_announce_dt
         else:
-            return next_sat_annouce_dt
+            return next_sat_announce_dt
 
 
 class RaffleApply(models.Model):
