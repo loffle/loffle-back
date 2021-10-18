@@ -1,4 +1,8 @@
+from datetime import datetime
+
+import pytz
 from django.db import models
+from django.utils import timezone
 from django.utils.timezone import now
 
 from account.models import User
@@ -103,14 +107,15 @@ class Product(models.Model):
 
 
 class Raffle(models.Model):
-    begin_at = models.DateTimeField(
+    start_date_time = models.DateTimeField(
         verbose_name='응모 시작 날짜',
     )
-    finish_at = models.DateTimeField(
+    end_date_time = models.DateTimeField(
         verbose_name='응모 종료 날짜',
     )
-    # announce_at = models.DateTimeField(
+    # announce_date_time = models.DateTimeField(
     #     verbose_name='당첨 발표 날짜',
+    #     default=self.get_announce_at()
     # )
     target_quantity = models.PositiveIntegerField(
         verbose_name='목표 티켓 수량',
@@ -144,7 +149,15 @@ class Raffle(models.Model):
 
     def get_announce_at(self):
 
-        return
+        # 이번주 토요일 자정까지는 이번주 토요일 21:00
+        #                이후는 다음주 토요일 09:00
+        this_sat_annouce_dt = this_sat_dt.replace(hour=21, minute=0)
+        next_sat_annouce_dt = this_sat_annouce_dt + datetime.timedelta(days=7)
+
+        if end_dt_kst < this_sat_midnight_dt:
+            return this_sat_dt.replace(hour=21, minute=0)
+        else:
+            return next_sat_annouce_dt
 
 
 class RaffleApply(models.Model):
@@ -173,6 +186,7 @@ class RaffleApply(models.Model):
 
     def __str__(self):
         return f'RaffleApply ({self.pk}) | {self.raffle} | {self.user}'
+
 
 class RaffleCandidate(models.Model):
     raffle = models.ForeignKey(Raffle,

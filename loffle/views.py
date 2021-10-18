@@ -67,7 +67,7 @@ class RaffleViewSet(CommonViewSet):
     permission_classes = [IsStaffOrReadOnly]  # Only Staff
     pagination_class = RafflePagination
 
-    queryset = Raffle.objects.all().order_by('finish_at')
+    queryset = Raffle.objects.all().order_by('end_date_time')
     serializer_class = RaffleSerializer
 
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,),
