@@ -74,14 +74,27 @@ class RaffleViewSet(CommonViewSet):
             url_path='apply', url_name='apply-raffle')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
+
         # 응모 여부 검사
         if obj.applied.filter(user__pk=request.user.pk).exists():
             return Response({'detail': '이미 응모한 래플입니다.'}, status=HTTP_409_CONFLICT)
+
+        # 래플 상태 검사
+        elif obj.progress != obj.PROGRESS_CHOICES[1][0]:
+            return Response({'detail': f'잘못된 진행 상황의 래플입니다. (진행 상황: {obj.get_progress_display()})'},
+                            status=HTTP_400_BAD_REQUEST)
+
+        # 응모 수량 검사
+        elif obj.apllied.count() >= obj.target_quantity:
+            return Response({'detail': '남은 응모 수량이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
+
         # 티켓 소유 검사
         elif request.user.buy_tickets.select_related('ticket').aggregate(
                 buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
             'buy_tickets'] - RaffleApply.objects.filter(user_id=request.user.pk).count() <= 0:
             return Response({'detail': '소유한 티켓이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
+
+        # 응모 가능 조건 충족!
         else:
             ra = RaffleApply.objects.create(
                 raffle=obj,
