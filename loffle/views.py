@@ -74,6 +74,7 @@ class RaffleViewSet(CommonViewSet):
             url_path='apply', url_name='apply-raffle')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
+        obj.save()  # (임시) 래플 상태 새로고침 용도 TODO: 나중에 지우기
 
         # 응모 여부 검사
         if obj.applied.filter(user__pk=request.user.pk).exists():
@@ -85,7 +86,7 @@ class RaffleViewSet(CommonViewSet):
                             status=HTTP_400_BAD_REQUEST)
 
         # 응모 수량 검사
-        elif obj.apllied.count() >= obj.target_quantity:
+        elif obj.applied.count() >= obj.target_quantity:
             return Response({'detail': '남은 응모 수량이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
 
         # 티켓 소유 검사
@@ -102,7 +103,28 @@ class RaffleViewSet(CommonViewSet):
             )
             ordinal_number = RaffleApply.objects.filter(raffle_id=ra.raffle_id,
                                                         created_at__lt=ra.created_at).count() + 1
+            obj.save()  # (임시) 래플 상태 새로고침 용도 TODO: 나중에 지우기
             return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
+
+    @action(methods=('post',), detail=True, permission_classes=(AllowAny,),
+            url_path='refresh-progress', url_name='refresh-raffle-progress')
+    def refresh_raffle_progress(self, request, **kwargs):
+        """
+        래플 상태를 새로고침
+        """
+        obj = self.get_object()
+        prev_progress = obj.get_progress_display()
+
+        obj.progress = obj.get_progress()  # 어차피 save 에서 실행되는 코드드
+        obj.save()
+
+        now_progress = obj.get_progress_display()
+
+        if prev_progress != now_progress:
+            message = f'래플 상태가 변경되었습니다. prev:{prev_progress} -> now:{now_progress}'
+        else:
+            message = f'래플 상태가 변경되지 않았습니다.'
+        return Response({'detail': message}, status=HTTP_200_OK)
 
 
 class ApplyUserViewSet(ReadOnlyModelViewSet):

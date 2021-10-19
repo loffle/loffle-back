@@ -156,10 +156,19 @@ class Raffle(models.Model):
     objects = CommonManager()
     deleted_objects = CommonManager(is_deleted=True)
 
+    __original_end_date_time = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_end_date_time = self.end_date_time
+
     def save(self, *args, **kwargs):
-        self.announce_date_time = self.get_announce_date_time()
+        if self.end_date_time != self.__original_end_date_time or self.announce_date_time:
+            self.announce_date_time = self.get_announce_date_time()
+
         self.progress = self.get_progress()
-        return super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
+        __original_end_date_time = self.end_date_time
 
     def get_announce_date_time(self):
         end_dt_utc = self.end_date_time  # datetime(tzinfo=<UTC>)
