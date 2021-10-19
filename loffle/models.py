@@ -1,10 +1,12 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import pytz
 from django.db import models
 from django.utils import timezone
 from django.utils.timezone import now
 
 from account.models import User
+
+KST = pytz.timezone('Asia/Seoul')
 
 
 class CommonManager(models.Manager):
@@ -121,23 +123,31 @@ class Raffle(models.Model):
     )
 
     # lottery = models.ForeignKey(Lottery, related_name='raffles', on_delete=models.SET_NULL, null=True, default=None)
-    user = models.ForeignKey(User,
-                             verbose_name='등록한 사람',
-                             related_name='raffles',
-                             on_delete=models.CASCADE
-                             )
-    product = models.ForeignKey(Product,
-                                verbose_name='연결된 제품',
-                                related_name='raffles',
-                                on_delete=models.CASCADE
-                                )
+    user = models.ForeignKey(
+        User,
+        verbose_name='등록한 사람',
+        related_name='raffles',
+        on_delete=models.CASCADE
+    )
+    product = models.ForeignKey(
+        Product,
+        verbose_name='연결된 제품',
+        related_name='raffles',
+        on_delete=models.CASCADE
+    )
 
-    # progress = models.ForeignKey(RaffleProgress,
-    #                              verbose_name='진행 상황',
-    #                              related_name='raffles',
-    #                              on_delete=models.PROTECT,
-    #                              default=1
-    #                              )
+    PROGRESS_CHOICES = (
+        ('waiting', '응모 대기'),
+        ('ongoing', '응모 진행중'),
+        ('done', '응모 종료'),
+        ('failed', '응모 실패')
+    )
+    progress = models.CharField(
+        verbose_name='진행 상황',
+        max_length=10,
+        choices=PROGRESS_CHOICES,
+        editable=False, blank=True,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -148,10 +158,10 @@ class Raffle(models.Model):
 
     def save(self, *args, **kwargs):
         self.announce_date_time = self.get_announce_date_time()
+        self.progress = self.get_progress()
         return super().save(*args, **kwargs)
 
     def get_announce_date_time(self):
-        KST = pytz.timezone('Asia/Seoul')
         end_dt_utc = self.end_date_time  # datetime(tzinfo=<UTC>)
         end_dt_kst = end_dt_utc.astimezone(KST)
 
@@ -168,6 +178,38 @@ class Raffle(models.Model):
             return this_sat_announce_dt
         else:
             return next_sat_announce_dt
+
+    def get_progress(self):
+        """
+        - 조건
+            - 응모 대기 (**default**)
+                - 현재 일시(now)보다 시작 일시(`start_date_time`)가 클 경우
+            - 응모 진행중
+                - 현재 일시(now)가 시작 일시(`start_date_time`)보다 클 경우
+                - 목표 수량(`target_quantity`)을 다 채우지 못했을 경우
+            - 응모 종료
+                - 목표 수량(`target_quantity`)을 다 채웠을 경우
+            - 응모 실패
+                - 목표 수량을 채우지 못하고 종료 일시(`end_date_time`)가 지날 경우
+        """
+
+        start_dt_utc = self.start_date_time  # datetime(tzinfo=<UTC>)
+        end_dt_utc = self.end_date_time  # datetime(tzinfo=<UTC>)
+
+        start_dt_kst = start_dt_utc.astimezone(KST)
+        end_dt_kst = end_dt_utc.astimezone(KST)
+        now_kst = datetime.now(tz=KST)
+
+        if now_kst < start_dt_kst:
+            return self.PROGRESS_CHOICES[0][0]          # 'waiting'
+        elif now_kst <= end_dt_kst:
+            applied_cnt = self.applied.count()  # 응모 카운트
+            if applied_cnt < self.target_quantity:
+                return self.PROGRESS_CHOICES[1][0]      # 'ongoing'
+            else:
+                return self.PROGRESS_CHOICES[2][0]      # 'done'
+        else:
+            return self.PROGRESS_CHOICES[3][0]          # 'failed'
 
 
 class RaffleApply(models.Model):
