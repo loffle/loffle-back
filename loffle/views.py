@@ -4,6 +4,7 @@ from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, \
     HTTP_200_OK
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -21,7 +22,7 @@ class TicketViewSet(ModelViewSet):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
 
-    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,),
+    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
             url_path='buy', url_name='buy-ticket')
     def buy_ticket(self, request, **kwargs):
         ticket = self.get_object()
@@ -31,7 +32,7 @@ class TicketViewSet(ModelViewSet):
         )
         return Response({'detail': '티켓 구매 성공✅'}, status=HTTP_201_CREATED)
 
-    @action(methods=('get',), detail=False, permission_classes=(IsAuthenticated,),
+    @action(methods=('get',), detail=False, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
             url_path='my-ticket', url_name='my-ticket')
     def get_ticket(self, request, **kwargs):
         # obj = self.get_object()
@@ -70,7 +71,7 @@ class RaffleViewSet(CommonViewSet):
     queryset = Raffle.objects.all().order_by('end_date_time')
     serializer_class = RaffleSerializer
 
-    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,),
+    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
             url_path='apply', url_name='apply-raffle')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
@@ -106,7 +107,7 @@ class RaffleViewSet(CommonViewSet):
             obj.save()  # (임시) 래플 상태 새로고침 용도 TODO: 나중에 지우기
             return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
 
-    @action(methods=('post',), detail=True, permission_classes=(AllowAny,),
+    @action(methods=('post',), detail=True, permission_classes=(AllowAny,), serializer_class=Serializer,
             url_path='refresh-progress', url_name='refresh-raffle-progress')
     def refresh_raffle_progress(self, request, **kwargs):
         """
