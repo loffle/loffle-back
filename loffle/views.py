@@ -40,9 +40,11 @@ class TicketViewSet(ModelViewSet):
 
         # 티켓의 수량 가져오기
         result = {
-            'num_of_tickets':
-                user.buy_tickets.select_related('ticket').aggregate(buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
-                    'buy_tickets'] - RaffleApply.objects.filter(user_id=user.pk).count()}
+            'num_buy_tickets': user.num_buy_tickets,
+            'num_use_tickets': user.num_use_tickets,
+            'num_return_tickets': user.num_return_tickets,
+            'num_tickets': user.num_tickets,
+        }
         return Response(result, status=HTTP_200_OK)
 
 
@@ -91,9 +93,7 @@ class RaffleViewSet(CommonViewSet):
             return Response({'detail': '남은 응모 수량이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
 
         # 티켓 소유 검사
-        elif request.user.buy_tickets.select_related('ticket').aggregate(
-                buy_tickets=Coalesce(Sum('ticket__quantity'), 0))[
-            'buy_tickets'] - RaffleApply.objects.filter(user_id=request.user.pk).count() <= 0:
+        elif request.user.num_tickets <= 0:
             return Response({'detail': '소유한 티켓이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
 
         # 응모 가능 조건 충족!
