@@ -147,10 +147,10 @@ class Raffle(models.Model):
 
     def save(self, *args, **kwargs):
         # 발표일시
-        if self.announce_date_time is None or self.end_date_time != self.__original_end_date_time:
+        if not self.announce_date_time or self.end_date_time != self.__original_end_date_time:
             self.announce_date_time = self.get_announce_date_time()
         # 진행상황
-        if self.progress is None:
+        if not self.progress:
             self.progress = self.get_progress()
 
         super().save(*args, **kwargs)
