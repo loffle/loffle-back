@@ -104,7 +104,10 @@ class RaffleViewSet(CommonViewSet):
             )
             ordinal_number = RaffleApply.objects.filter(raffle_id=ra.raffle_id,
                                                         created_at__lt=ra.created_at).count() + 1
-            obj.save()  # (임시) 래플 상태 새로고침 용도 TODO: 나중에 지우기
+            # 래플 상태 새로고침
+            if applied_cnt + 1 == obj.target_quantity:
+                obj.progress = None
+                obj.save()
             return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
 
     @action(methods=('post',), detail=True, permission_classes=(AllowAny,), serializer_class=Serializer,

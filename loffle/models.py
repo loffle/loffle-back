@@ -90,23 +90,6 @@ class Product(models.Model):
         return f"{self.name} | {self.brand} | {self.color} | {self.size}"
 
 
-# class RaffleProgress(models.Model):
-#     name = models.CharField(
-#         verbose_name='진행 상황',
-#         max_length=10,
-#         choices=(
-#             ('waiting', '응모 대기'),
-#             ('ongoing', '응모 진행중'),
-#             ('done', '응모 종료'),
-#             ('failed', '응모 실패'),
-#         ),
-#         default='waiting',
-#     )
-#
-#     class Meta:
-#         db_table = '_'.join((__package__, 'raffle_progress'))
-
-
 class Raffle(models.Model):
     start_date_time = models.DateTimeField(
         verbose_name='응모 시작 날짜',
@@ -163,11 +146,15 @@ class Raffle(models.Model):
         self.__original_end_date_time = self.end_date_time
 
     def save(self, *args, **kwargs):
-        if self.end_date_time != self.__original_end_date_time or self.announce_date_time:
+        # 발표일시
+        if self.announce_date_time is None or self.end_date_time != self.__original_end_date_time:
             self.announce_date_time = self.get_announce_date_time()
+        # 진행상황
+        if self.progress is None:
+            self.progress = self.get_progress()
 
-        self.progress = self.get_progress()
         super().save(*args, **kwargs)
+
         __original_end_date_time = self.end_date_time
 
     def get_announce_date_time(self):
