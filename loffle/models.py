@@ -143,6 +143,10 @@ class Raffle(models.Model):
     objects = CommonManager()
     deleted_objects = CommonManager(is_deleted=True)
 
+    @property
+    def applied_count(self):
+        return self.applied.count()
+
     __original_end_date_time = None
 
     def __init__(self, *args, **kwargs):
@@ -152,18 +156,18 @@ class Raffle(models.Model):
     def save(self, *args, **kwargs):
         # 발표일시
         if not self.announce_date_time or self.end_date_time != self.__original_end_date_time:
-            self.announce_date_time = self.get_announce_date_time()
-            self.progress = self.get_progress()
+            self.announce_date_time = self.calc_announce_date_time()
+            self.progress = self.calc_progress()
 
         # 진행상황
         if not self.progress:
-            self.progress = self.get_progress()
+            self.progress = self.calc_progress()
 
         super().save(*args, **kwargs)
 
         __original_end_date_time = self.end_date_time
 
-    def get_announce_date_time(self):
+    def calc_announce_date_time(self):
         end_dt_utc = self.end_date_time  # datetime(tzinfo=<UTC>)
         end_dt_kst = end_dt_utc.astimezone(KST)
 
@@ -172,7 +176,7 @@ class Raffle(models.Model):
         this_sat_midnight_dt = this_sat_dt.replace(hour=0, minute=1)
 
         # 이번주 토요일 자정까지는 이번주 토요일 21:00
-        #                이후는 다음주 토요일 09:00
+        #                이후는 다음주 토요일 21:00
         this_sat_announce_dt = this_sat_dt.replace(hour=21, minute=0, second=0)
         next_sat_announce_dt = this_sat_announce_dt + timedelta(days=7)
 
@@ -181,7 +185,7 @@ class Raffle(models.Model):
         else:
             return next_sat_announce_dt
 
-    def get_progress(self):
+    def calc_progress(self):
         """
         - 조건
             - 응모 대기 (**default**)
@@ -206,7 +210,7 @@ class Raffle(models.Model):
             return self.PROGRESS_CHOICES[0][0]  # 'waiting'
         elif now_kst <= end_dt_kst:
             applied_cnt = self.applied.count()  # 응모 카운트
-            if applied_cnt < self.target_quantity:
+            if self.applied_count < self.target_quantity:
                 return self.PROGRESS_CHOICES[1][0]  # 'ongoing'
             else:
                 return self.PROGRESS_CHOICES[2][0]  # 'done'
