@@ -153,6 +153,8 @@ class Raffle(models.Model):
         # 발표일시
         if not self.announce_date_time or self.end_date_time != self.__original_end_date_time:
             self.announce_date_time = self.get_announce_date_time()
+            self.progress = self.get_progress()
+
         # 진행상황
         if not self.progress:
             self.progress = self.get_progress()
@@ -201,15 +203,15 @@ class Raffle(models.Model):
         now_kst = datetime.now(tz=KST)
 
         if now_kst < start_dt_kst:
-            return self.PROGRESS_CHOICES[0][0]          # 'waiting'
+            return self.PROGRESS_CHOICES[0][0]  # 'waiting'
         elif now_kst <= end_dt_kst:
             applied_cnt = self.applied.count()  # 응모 카운트
             if applied_cnt < self.target_quantity:
-                return self.PROGRESS_CHOICES[1][0]      # 'ongoing'
+                return self.PROGRESS_CHOICES[1][0]  # 'ongoing'
             else:
-                return self.PROGRESS_CHOICES[2][0]      # 'done'
+                return self.PROGRESS_CHOICES[2][0]  # 'done'
         else:
-            return self.PROGRESS_CHOICES[3][0]          # 'failed'
+            return self.PROGRESS_CHOICES[3][0]  # 'failed'
 
     @property
     def applied_count(self):
