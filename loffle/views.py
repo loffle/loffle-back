@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
@@ -77,38 +78,19 @@ class RaffleViewSet(CommonViewSet):
             url_path='apply', url_name='apply-raffle')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
-        applied_cnt = obj.applied.count()  # 현재 래플에 응모된 티켓 수량
+        applied_cnt = obj.applied_count  # 현재 래플에 응모된 티켓 수량
 
-        # 응모 여부 검사
-        if obj.applied.filter(user__pk=request.user.pk).exists():
-            return Response({'detail': '이미 응모한 래플입니다.'}, status=HTTP_409_CONFLICT)
+        # RaffleApply 객체 생성하여 저장할 때 clean() 메소드에서 응모 가능 조건들 검사
+        # 조건: 응모 여부 / 래플 상태 / 티켓 소유 / 응모 가능 수량
+        ra = RaffleApply(raffle=obj, user=request.user)
+        try:
+            ra.full_clean()
+        except ValidationError as e:
+            return Response(e.message_dict, status=HTTP_400_BAD_REQUEST)
+        ra.save()
 
-        # 래플 상태 검사
-        elif obj.progress != obj.PROGRESS_CHOICES[1][0]:
-            return Response({'detail': f'잘못된 진행 상황의 래플입니다. (진행 상황: {obj.get_progress_display()})'},
-                            status=HTTP_400_BAD_REQUEST)
-
-        # 응모 수량 검사
-        elif applied_cnt >= obj.target_quantity:
-            return Response({'detail': '남은 응모 수량이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
-
-        # 티켓 소유 검사
-        elif request.user.num_tickets <= 0:
-            return Response({'detail': '소유한 티켓이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
-
-        # 응모 가능 조건 충족!
-        else:
-            ra = RaffleApply.objects.create(
-                raffle=obj,
-                user=request.user,
-            )
-            ordinal_number = RaffleApply.objects.filter(raffle_id=ra.raffle_id,
-                                                        created_at__lt=ra.created_at).count() + 1
-            # 래플 상태 새로고침
-            if applied_cnt + 1 == obj.target_quantity:
-                obj.progress = None
-                obj.save()
-            return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
+        ordinal_number = applied_cnt + 1
+        return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
 
     @action(methods=('post',), detail=True, permission_classes=(AllowAny,), serializer_class=Serializer,
             url_path='refresh-progress', url_name='refresh-raffle-progress')

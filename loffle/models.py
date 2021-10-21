@@ -1,5 +1,7 @@
+from collections import defaultdict
 from datetime import timedelta, datetime
 import pytz
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -209,6 +211,10 @@ class Raffle(models.Model):
         else:
             return self.PROGRESS_CHOICES[3][0]          # 'failed'
 
+    @property
+    def applied_count(self):
+        return self.applied.count()
+
 
 class RaffleApply(models.Model):
     raffle = models.ForeignKey(
@@ -236,6 +242,43 @@ class RaffleApply(models.Model):
 
     def __str__(self):
         return f'RaffleApply ({self.pk}) | {self.raffle} | {self.user}'
+
+    def clean(self):
+        error_dict = defaultdict(list)
+
+        # 응모 여부 검사
+        if RaffleApply.objects.filter(raffle__pk=self.raffle.pk, user__pk=self.user.pk).exists():
+            error_dict['user'].append(f'사용자 <{self.user.username}>는 이미 응모한 래플입니다.')
+
+        # 티켓 소유 검사
+        if self.user.num_tickets <= 0:
+            error_dict['user'].append(f'사용자 <{self.user.username}>는 소유한 티켓이 없습니다.')
+
+        # 응모 가능 수량 검사
+        if self.raffle.applied_count >= self.raffle.target_quantity:
+            error_dict['raffle'].append(f"응모 가능한 수량<{self.raffle.target_quantity}>을 초과하였습니다.")
+
+        # 래플 상태 검사
+        if self.raffle.progress != self.raffle.PROGRESS_CHOICES[1][0]:
+            error_dict['raffle'].append(f'진행 상황이 <{self.raffle.get_progress_display()}>인 래플은 응모할 수 없습니다.')
+
+        if len(error_dict) > 0:
+            raise ValidationError(error_dict)
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # 래플이 목표 수량을 채운 경우
+        if self.raffle.applied_count >= self.raffle.target_quantity:
+            # 래플의 진행 상황을 종료(done)로 변경
+            self.raffle.progress = self.raffle.PROGRESS_CHOICES[2][0]
+            self.raffle.save(update_fields=['progress'])
+
+            # 1차 추첨 시작
+
+
 
 
 class RaffleCandidate(models.Model):
