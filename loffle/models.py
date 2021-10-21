@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime
 import pytz
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.timezone import now
@@ -103,6 +104,7 @@ class Raffle(models.Model):
     )
     target_quantity = models.PositiveIntegerField(
         verbose_name='목표 티켓 수량',
+        validators=[MinValueValidator(limit_value=3)]
     )
 
     # lottery = models.ForeignKey(Lottery, related_name='raffles', on_delete=models.SET_NULL, null=True, default=None)
