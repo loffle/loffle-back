@@ -13,7 +13,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include, re_path
 from drf_yasg import openapi
@@ -21,31 +20,32 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.response import Response
-from rest_framework.routers import DefaultRouter
-from rest_framework.views import APIView
+from rest_framework.routers import DefaultRouter, APIRootView
 
 import community.urls
+import account.urls
+import loffle.urls
 
-# router = DefaultRouter()
-# router.registry.extend(community.urls.router.registry)
 
-class LoffleBackendAPIRootView(APIView):
+class LoffleBackendAPIRootView(APIRootView):
     """
     로플의 백엔드 API Root
     """
-    def get(self, request, *args, **kwargs):
-        api = {'community': request.build_absolute_uri('community/'),
-               # 'account': request.build_absolute_uri('account/'),
-               'loffle': request.build_absolute_uri('loffle/'),
-               }
-        return Response(api)
+    pass
+
+
+router = DefaultRouter(trailing_slash=False)
+router.APIRootView = LoffleBackendAPIRootView
+
+router.registry.extend(community.urls.router.registry)
+router.registry.extend(account.urls.router.registry)
+router.registry.extend(loffle.urls.router.registry)
 
 urlpatterns = [
-    path('', LoffleBackendAPIRootView.as_view()),
-    # path('', include(router.urls)),
-    path('community', include('community.urls'), name='community'),
-    path('account', include('account.urls'), name='account'),
-    path('loffle', include('loffle.urls'), name='loffle'),
+    path('', include(router.urls)),
+    # path('', include('community.urls'), name='community'),
+    path('', include('account.urls'), name='account'),
+    # path('', include('loffle.urls'), name='loffle'),
 
     path('admin/', admin.site.urls),
 
@@ -63,7 +63,7 @@ schema_view = get_schema_view(
         license=openapi.License(name="MIT License"),
     ),
     public=True,
-    permission_classes=[permissions.AllowAny],
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns += [
