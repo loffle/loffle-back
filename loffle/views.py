@@ -96,12 +96,12 @@ class RaffleViewSet(CommonViewSet):
             url_path='refresh-progress', url_name='refresh-raffle-progress')
     def refresh_raffle_progress(self, request, **kwargs):
         """
-        래플 상태를 새로고침
+        래플 상태를 새로고침 (임시)
         """
         obj = self.get_object()
         prev_progress = obj.get_progress_display()
 
-        obj.progress = obj.get_progress()  # 어차피 save 에서 실행되는 코드드
+        obj.progress = None
         obj.save()
 
         now_progress = obj.get_progress_display()
