@@ -1,15 +1,13 @@
 from collections import defaultdict
 from datetime import timedelta, datetime
-import pytz
+from pytz import timezone as pytz_tz
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.utils import timezone
-from django.utils.timezone import now
 
 from account.models import User
 
-KST = pytz.timezone('Asia/Seoul')
+KST = pytz_tz('Asia/Seoul')
 
 
 class CommonManager(models.Manager):
@@ -207,15 +205,15 @@ class Raffle(models.Model):
         now_kst = datetime.now(tz=KST)
 
         if now_kst < start_dt_kst:
-            return self.PROGRESS_CHOICES[0][0]  # 'waiting'
+            return Raffle.PROGRESS_CHOICES[0][0]  # 'waiting'
         elif now_kst <= end_dt_kst:
-            applied_cnt = self.applied.count()  # 응모 카운트
             if self.applied_count < self.target_quantity:
-                return self.PROGRESS_CHOICES[1][0]  # 'ongoing'
+                return Raffle.PROGRESS_CHOICES[1][0]  # 'ongoing'
             else:
-                return self.PROGRESS_CHOICES[2][0]  # 'done'
+                return Raffle.PROGRESS_CHOICES[2][0]  # 'done'
         else:
-            return self.PROGRESS_CHOICES[3][0]  # 'failed'
+            return Raffle.PROGRESS_CHOICES[3][0]  # 'failed'
+
 
     @property
     def applied_count(self):
@@ -279,7 +277,7 @@ class RaffleApply(models.Model):
         # 래플이 목표 수량을 채운 경우
         if self.raffle.applied_count >= self.raffle.target_quantity:
             # 래플의 진행 상황을 종료(done)로 변경
-            self.raffle.progress = self.raffle.PROGRESS_CHOICES[2][0]
+            self.raffle.progress = Raffle.PROGRESS_CHOICES[2][0] # done
             self.raffle.save(update_fields=['progress'])
 
             # 1차 추첨 시작
