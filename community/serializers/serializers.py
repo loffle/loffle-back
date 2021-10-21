@@ -30,7 +30,7 @@ class CommonSerializer(ModelSerializer):
 
 # ----- PostComment, Post ----- #
 class PostCommentListSerializer(CommonSerializer, LikeField):
-    url = CommentDetailUrlField(view_name='post-comments-detail')
+    url = CommentDetailUrlField(view_name='post-comment-detail')
 
     class Meta:
         model = PostComment
@@ -46,7 +46,7 @@ class PostCommentDetailSerializer(CommonSerializer, LikeField):
 
 
 class PostListSerializer(CommonSerializer, LikeField, CommentField):
-    url = HyperlinkedIdentityField(view_name='posts-detail')
+    url = HyperlinkedIdentityField(view_name='post-detail')
 
     class Meta:
         model = Post
@@ -55,7 +55,7 @@ class PostListSerializer(CommonSerializer, LikeField, CommentField):
 
 
 class PostDetailSerializer(CommonSerializer, LikeField, CommentField):
-    comment_url = CommentListUrlField(view_name='post-comments-list')
+    comment_url = CommentListUrlField(view_name='post-comment-list')
 
     # comments = PostCommentListSerializer(many=True, read_only=True)
 
@@ -69,7 +69,7 @@ class PostDetailSerializer(CommonSerializer, LikeField, CommentField):
 
 # ----- ReviewComment, Review ----- #
 class ReviewCommentListSerializer(CommonSerializer, LikeField):
-    url = CommentDetailUrlField(view_name='review-comments-detail')
+    url = CommentDetailUrlField(view_name='review-comment-detail')
 
     class Meta:
         model = ReviewComment
@@ -85,7 +85,7 @@ class ReviewCommentDetailSerializer(CommonSerializer, LikeField):
 
 
 class ReviewListSerializer(CommonSerializer, LikeField, CommentField):
-    url = HyperlinkedIdentityField(view_name='reviews-detail')
+    url = HyperlinkedIdentityField(view_name='review-detail')
 
     class Meta:
         model = Review
@@ -94,7 +94,7 @@ class ReviewListSerializer(CommonSerializer, LikeField, CommentField):
 
 
 class ReviewDetailSerializer(CommonSerializer, LikeField, CommentField):
-    comment_url = CommentListUrlField(view_name='review-comments-list')
+    comment_url = CommentListUrlField(view_name='review-comment-list')
 
     # comments = ReviewCommentListSerializer(many=True, read_only=True)
 
@@ -108,7 +108,7 @@ class ReviewDetailSerializer(CommonSerializer, LikeField, CommentField):
 
 # ----- Notice ----- #
 class NoticeListSerializer(CommonSerializer):
-    url = HyperlinkedIdentityField(view_name='notices-detail')
+    url = HyperlinkedIdentityField(view_name='notice-detail')
 
     class Meta:
         model = Notice
@@ -127,7 +127,7 @@ class NoticeDetailSerializer(CommonSerializer):
 
 # ----- Answer, Question ----- #
 class AnswerListSerializer(CommonSerializer):
-    url = CommentDetailUrlField(view_name='answers-detail')
+    url = CommentDetailUrlField(view_name='answer-detail')
 
     class Meta:
         model = Answer
@@ -143,7 +143,7 @@ class AnswerDetailSerializer(CommonSerializer):
 
 
 class QuestionListSerializer(CommonSerializer, AnswerField):
-    url = HyperlinkedIdentityField(view_name='questions-detail')
+    url = HyperlinkedIdentityField(view_name='question-detail')
 
     class Meta:
         model = Question
@@ -152,7 +152,7 @@ class QuestionListSerializer(CommonSerializer, AnswerField):
 
 
 class QuestionDetailSerializer(CommonSerializer, AnswerField):
-    answer_url = CommentListUrlField(view_name='answers-list')
+    answer_url = CommentListUrlField(view_name='answer-list')
 
     # answers = AnswerListSerializer(many=True, read_only=True)
 
