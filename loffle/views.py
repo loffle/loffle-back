@@ -77,7 +77,7 @@ class RaffleViewSet(CommonViewSet):
             url_path='apply', url_name='apply-raffle')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
-        obj.save()  # (임시) 래플 상태 새로고침 용도 TODO: 나중에 지우기
+        applied_cnt = obj.applied.count()  # 현재 래플에 응모된 티켓 수량
 
         # 응모 여부 검사
         if obj.applied.filter(user__pk=request.user.pk).exists():
@@ -89,7 +89,7 @@ class RaffleViewSet(CommonViewSet):
                             status=HTTP_400_BAD_REQUEST)
 
         # 응모 수량 검사
-        elif obj.applied.count() >= obj.target_quantity:
+        elif applied_cnt >= obj.target_quantity:
             return Response({'detail': '남은 응모 수량이 없습니다.'}, status=HTTP_400_BAD_REQUEST)
 
         # 티켓 소유 검사
