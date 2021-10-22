@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Case, When, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from rest_framework.decorators import action
@@ -71,8 +71,40 @@ class RaffleViewSet(CommonViewSet):
     permission_classes = [IsStaffOrReadOnly]  # Only Staff
     pagination_class = RafflePagination
 
-    queryset = Raffle.objects.all().order_by('end_date_time')
     serializer_class = RaffleSerializer
+    # queryset = Raffle.objects.all()
+
+    def get_queryset(self):
+        qs = Raffle.objects.all()
+
+        ordering_keys_iter = iter(Raffle.PROGRESS_ORDERING.keys())
+        ordering_values_iter = iter(Raffle.PROGRESS_ORDERING.values())
+
+        # 'ongoing'
+        qs1 = qs.filter(progress=next(ordering_keys_iter)).order_by('end_date_time') \
+            .annotate(
+            rank=Value(next(ordering_values_iter))
+        )
+
+        # 'waiting'
+        qs2 = qs.filter(progress=next(ordering_keys_iter)).order_by('start_date_time') \
+            .annotate(
+            rank=Value(next(ordering_values_iter))
+        )
+
+        # 'done', 'failed'
+        qs3 = qs.filter(progress__in=list(Raffle.PROGRESS_ORDERING.keys())[2:]) \
+            .order_by('-end_date_time') \
+            .annotate(
+            rank=Case(
+                When(progress=next(ordering_keys_iter), then=Value(next(ordering_values_iter))),
+                When(progress=next(ordering_keys_iter), then=Value(next(ordering_values_iter))),
+                default=Value(99),
+            )
+        )
+
+        result = [*qs1, *qs2, *qs3]
+        return result
 
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
             url_path='apply', url_name='apply-raffle')
