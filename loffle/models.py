@@ -1,5 +1,8 @@
 from collections import defaultdict
 from datetime import timedelta, datetime
+from json import dumps
+from random import sample
+
 from pytz import timezone as pytz_tz
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -155,6 +158,10 @@ class Raffle(models.Model):
     def applied_count(self):
         return self.applied.count()
 
+    @property
+    def candidates_count(self):
+        return self.candidates.count()
+
     __original_end_date_time = None
 
     def __init__(self, *args, **kwargs):
@@ -224,10 +231,35 @@ class Raffle(models.Model):
         else:
             return Raffle.PROGRESS_CHOICES[3][0]  # 'failed'
 
+    CANDIDATES_N = (45, 15, 9, 5, 3)  # 45의 약수(divisor)
 
-    @property
-    def applied_count(self):
-        return self.applied.count()
+    def create_candidates(self):
+        # 래플 상태가 done(완료) 인지 확인
+        if self.progress != Raffle.PROGRESS_CHOICES[2][0]:
+            return False
+
+        # 래플의 후보자가 존재하면 이미 추첨이 진행되었다고 판단
+        if self.candidates_count > 0:
+            print('이미 진행된 추첨이 존재합니다.')
+            return False
+
+        # 45의 약수 중 목표 수량(target_quantity)에서 제일 가까운 수를 [n: 후보자의 수]로 설정
+        for num_candidates in Raffle.CANDIDATES_N:
+            if self.target_quantity >= num_candidates:
+                break
+
+        # 응모자를 후보자의 수로 추려내기
+        applicants_id_list = list(self.applied.select_related('user').values_list('user_id', flat=True))
+        candidates_id_list = sample(applicants_id_list, num_candidates)
+
+        candidates_list = []
+        num_given_numbers = 45 // num_candidates
+        for i, user_id in enumerate(candidates_id_list):
+            given_numbers = [j + i * num_given_numbers for j in range(1, num_given_numbers + 1)]
+            candidates_list.append(RaffleCandidate(raffle_id=self.pk, user_id=user_id, given_numbers=dumps(given_numbers)))
+
+        RaffleCandidate.objects.bulk_create(candidates_list)
+        return True
 
 
 class RaffleApply(models.Model):
@@ -295,16 +327,22 @@ class RaffleApply(models.Model):
 
 
 class RaffleCandidate(models.Model):
-    raffle = models.ForeignKey(Raffle,
-                               verbose_name='래플',
-                               related_name='candidates',
-                               on_delete=models.CASCADE,
-                               )
-    user = models.ForeignKey(User,
-                             verbose_name='1차 당첨자',
-                             related_name='candidate_raffles',
-                             on_delete=models.CASCADE,
-                             )
+    raffle = models.ForeignKey(
+        Raffle,
+        verbose_name='래플',
+        related_name='candidates',
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        User,
+        verbose_name='1차 당첨자',
+        related_name='candidate_raffles',
+        on_delete=models.CASCADE,
+    )
+    given_numbers = models.CharField(
+        verbose_name='부여받은 번호',
+        max_length=100,
+    )
 
     class Meta:
         db_table = '_'.join((__package__, 'raffle_candidate'))
