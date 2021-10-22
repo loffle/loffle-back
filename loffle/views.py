@@ -72,10 +72,10 @@ class RaffleViewSet(CommonViewSet):
     pagination_class = RafflePagination
 
     serializer_class = RaffleSerializer
-    # queryset = Raffle.objects.all()
+    queryset = Raffle.objects.all()
 
-    def get_queryset(self):
-        qs = Raffle.objects.all()
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
 
         ordering_keys_iter = iter(Raffle.PROGRESS_ORDERING.keys())
         ordering_values_iter = iter(Raffle.PROGRESS_ORDERING.values())
@@ -103,8 +103,16 @@ class RaffleViewSet(CommonViewSet):
             )
         )
 
-        result = [*qs1, *qs2, *qs3]
-        return result
+        # result = qs1.union(qs2, qs3)
+        query_list = [*qs1, *qs2, *qs3]
+
+        page = self.paginate_queryset(query_list)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(query_list, many=True)
+        return Response(serializer.data)
 
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
             url_path='apply', url_name='apply-raffle')
