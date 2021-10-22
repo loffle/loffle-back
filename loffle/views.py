@@ -11,10 +11,11 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_40
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from account.models import User
-from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply
+from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply, RaffleCandidate
 from loffle.paginations import ApplyUserPagination, RafflePagination
 from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
-from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplyUserSerializer
+from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplyUserSerializer, \
+    RaffleCandidateSerializer
 
 
 class TicketViewSet(ModelViewSet):
@@ -161,3 +162,11 @@ class ApplyUserViewSet(ReadOnlyModelViewSet):
     def get_queryset(self):
         return User.objects.filter(
             applied_raffles__raffle_id=self.kwargs['parent_lookup_raffle']).order_by('applied_raffles__created_at')
+
+
+class RaffleCandidateViewSet(ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+    serializer_class = RaffleCandidateSerializer
+
+    def get_queryset(self):
+        return RaffleCandidate.objects.filter(raffle_id=self.kwargs['parent_lookup_raffle'])
