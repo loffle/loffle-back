@@ -133,6 +133,16 @@ class Raffle(models.Model):
         choices=PROGRESS_CHOICES,
         editable=False, blank=True,
     )
+    PROGRESS_ORDERING = {
+        # ongoing
+        PROGRESS_CHOICES[1][0]: 1,
+        # waiting
+        PROGRESS_CHOICES[0][0]: 2,
+        # done
+        PROGRESS_CHOICES[2][0]: 3,
+        # failed
+        PROGRESS_CHOICES[3][0]: 4,
+    }  # python 3.7+ dict 삽입 순서 유지
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -263,7 +273,7 @@ class RaffleApply(models.Model):
             error_dict['raffle'].append(f"응모 가능한 수량<{self.raffle.target_quantity}>을 초과하였습니다.")
 
         # 래플 상태 검사
-        if self.raffle.progress != self.raffle.PROGRESS_CHOICES[1][0]:
+        if self.raffle.progress != Raffle.PROGRESS_CHOICES[1][0]:
             error_dict['raffle'].append(f'진행 상황이 <{self.raffle.get_progress_display()}>인 래플은 응모할 수 없습니다.')
 
         if len(error_dict) > 0:
@@ -275,14 +285,13 @@ class RaffleApply(models.Model):
         super().save(*args, **kwargs)
 
         # 래플이 목표 수량을 채운 경우
-        if self.raffle.applied_count >= self.raffle.target_quantity:
+        if self.raffle.applied_count == self.raffle.target_quantity:
             # 래플의 진행 상황을 종료(done)로 변경
-            self.raffle.progress = Raffle.PROGRESS_CHOICES[2][0] # done
+            self.raffle.progress = Raffle.PROGRESS_CHOICES[2][0]  # done
             self.raffle.save(update_fields=['progress'])
 
             # 1차 추첨 시작
-
-
+            self.raffle.create_candidates()
 
 
 class RaffleCandidate(models.Model):
