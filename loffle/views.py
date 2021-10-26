@@ -7,15 +7,15 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, \
-    HTTP_200_OK
+    HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from account.models import User
-from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply, RaffleCandidate
+from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply, RaffleCandidate, RaffleWinner
 from loffle.paginations import ApplyUserPagination, RafflePagination
 from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
-from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplyUserSerializer, \
-    RaffleCandidateSerializer
+from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplicantSerializer, \
+    RaffleCandidateSerializer, RaffleWinnerSerializer
 
 
 class TicketViewSet(ModelViewSet):
@@ -170,3 +170,12 @@ class RaffleCandidateViewSet(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return RaffleCandidate.objects.filter(raffle_id=self.kwargs['parent_lookup_raffle'])
+
+
+class RaffleWinnerViewSet(ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+    serializer_class = RaffleWinnerSerializer
+
+    def get_queryset(self):
+        return RaffleWinner.objects.filter(
+            raffle_candidate__raffle_id=self.kwargs['parent_lookup_raffle'])

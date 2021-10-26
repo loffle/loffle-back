@@ -27,6 +27,10 @@ raffle.register('candidates',
                 RaffleCandidateViewSet,
                 basename='candidate',
                 parents_query_lookups=('raffle',))
+raffle.register('winner',
+                RaffleWinnerViewSet,
+                basename='winner',
+                parents_query_lookups=('raffle',))
 
 urlpatterns = [
     path('', include(router.urls)),

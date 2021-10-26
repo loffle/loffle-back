@@ -7,7 +7,7 @@ from rest_framework.serializers import ModelSerializer
 
 from account.models import User
 from community.serializers.custom.fields import CommentListUrlField
-from loffle.models import Ticket, Product, Raffle, RaffleCandidate
+from loffle.models import Ticket, Product, Raffle, RaffleCandidate, RaffleWinner
 
 
 class TicketSerializer(ModelSerializer):
@@ -107,3 +107,15 @@ class RaffleCandidateSerializer(ModelSerializer):
         if 'given_numbers' in ret:
             ret['given_numbers'] = loads(instance.given_numbers)
         return ret
+
+
+class RaffleWinnerSerializer(ModelSerializer):
+    user = SerializerMethodField()
+
+    class Meta:
+        model = RaffleWinner
+        fields = ('user',)
+
+    def get_user(self, obj):
+        raffle_id = self.context['view'].kwargs['parent_lookup_raffle']
+        return str(obj.raffle_candidate.user)
