@@ -154,10 +154,10 @@ class RaffleViewSet(CommonViewSet):
         return Response({'detail': message}, status=HTTP_200_OK)
 
 
-class ApplyUserViewSet(ReadOnlyModelViewSet):
+class ApplicantViewSet(ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     # pagination_class = ApplyUserPagination
-    serializer_class = ApplyUserSerializer
+    serializer_class = ApplicantSerializer
 
     def get_queryset(self):
         return User.objects.filter(

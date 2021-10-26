@@ -63,7 +63,7 @@ class RaffleSerializer(CommonSerializer):
 
     apply_count = SerializerMethodField()
     apply_or_not = SerializerMethodField()
-    apply_user_list_url = CommentListUrlField(view_name='apply-user-list')
+    apply_user_list_url = CommentListUrlField(view_name='applicant-list')
 
     # candidate_list_url = CommentListUrlField(view_name='candidate-list')
 
@@ -80,7 +80,7 @@ class RaffleSerializer(CommonSerializer):
         return obj.applied.filter(user__pk=self.context['request'].user.pk).exists()
 
 
-class ApplyUserSerializer(ModelSerializer):
+class ApplicantSerializer(ModelSerializer):
     apply_at = SerializerMethodField()
 
     # row_number = SerializerMethodField()
