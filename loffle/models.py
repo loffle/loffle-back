@@ -184,8 +184,10 @@ class Raffle(models.Model):
 
         __original_end_date_time = self.end_date_time
 
-    def calc_announce_date_time(self):
+    def calc_announce_date_time(self, done_date_time=None):
         end_dt_utc = self.end_date_time  # datetime(tzinfo=<UTC>)
+        if done_date_time:
+            end_dt_utc = done_date_time
         end_dt_kst = end_dt_utc.astimezone(KST)
 
         # weekday() -> 0: Mon, 1: Tue, ..., 4: Fri, 5: Sat, 6: Sun
@@ -344,7 +346,11 @@ class RaffleApply(models.Model):
         if self.raffle.applied_count == self.raffle.target_quantity:
             # 래플의 진행 상황을 종료(done)로 변경
             self.raffle.progress = Raffle.PROGRESS_CHOICES[2][0]  # done
-            self.raffle.save(update_fields=['progress'])
+
+            # 래플의 발표일시 업데이트
+            self.raffle.announce_date_time = self.raffle.calc_announce_date_time(done_date_time=datetime.now())
+
+            self.raffle.save(update_fields=['progress', 'announce_date_time'])
 
             # 1차 추첨 시작
             self.raffle.create_candidates()
