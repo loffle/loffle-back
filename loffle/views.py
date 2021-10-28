@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Case, When, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from rest_framework.decorators import action
@@ -7,14 +7,15 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, \
-    HTTP_200_OK
+    HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from account.models import User
-from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply
+from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply, RaffleCandidate, RaffleWinner
 from loffle.paginations import ApplyUserPagination, RafflePagination
 from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
-from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplyUserSerializer
+from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplicantSerializer, \
+    RaffleCandidateSerializer, RaffleWinnerSerializer
 
 
 class TicketViewSet(ModelViewSet):
@@ -71,8 +72,48 @@ class RaffleViewSet(CommonViewSet):
     permission_classes = [IsStaffOrReadOnly]  # Only Staff
     pagination_class = RafflePagination
 
-    queryset = Raffle.objects.all().order_by('end_date_time')
     serializer_class = RaffleSerializer
+    queryset = Raffle.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+
+        ordering_keys_iter = iter(Raffle.PROGRESS_ORDERING.keys())
+        ordering_values_iter = iter(Raffle.PROGRESS_ORDERING.values())
+
+        # 'ongoing'
+        qs1 = qs.filter(progress=next(ordering_keys_iter)).order_by('end_date_time') \
+            .annotate(
+            rank=Value(next(ordering_values_iter))
+        )
+
+        # 'waiting'
+        qs2 = qs.filter(progress=next(ordering_keys_iter)).order_by('start_date_time') \
+            .annotate(
+            rank=Value(next(ordering_values_iter))
+        )
+
+        # 'done', 'failed'
+        qs3 = qs.filter(progress__in=list(Raffle.PROGRESS_ORDERING.keys())[2:]) \
+            .order_by('-end_date_time') \
+            .annotate(
+            rank=Case(
+                When(progress=next(ordering_keys_iter), then=Value(next(ordering_values_iter))),
+                When(progress=next(ordering_keys_iter), then=Value(next(ordering_values_iter))),
+                default=Value(99),
+            )
+        )
+
+        # result = qs1.union(qs2, qs3)
+        query_list = [*qs1, *qs2, *qs3]
+
+        page = self.paginate_queryset(query_list)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(query_list, many=True)
+        return Response(serializer.data)
 
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
             url_path='apply', url_name='apply-raffle')
@@ -96,12 +137,12 @@ class RaffleViewSet(CommonViewSet):
             url_path='refresh-progress', url_name='refresh-raffle-progress')
     def refresh_raffle_progress(self, request, **kwargs):
         """
-        래플 상태를 새로고침
+        래플 상태를 새로고침 (임시)
         """
         obj = self.get_object()
         prev_progress = obj.get_progress_display()
 
-        obj.progress = obj.get_progress()  # 어차피 save 에서 실행되는 코드드
+        obj.progress = None
         obj.save()
 
         now_progress = obj.get_progress_display()
@@ -113,11 +154,28 @@ class RaffleViewSet(CommonViewSet):
         return Response({'detail': message}, status=HTTP_200_OK)
 
 
-class ApplyUserViewSet(ReadOnlyModelViewSet):
+class ApplicantViewSet(ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     # pagination_class = ApplyUserPagination
-    serializer_class = ApplyUserSerializer
+    serializer_class = ApplicantSerializer
 
     def get_queryset(self):
         return User.objects.filter(
             applied_raffles__raffle_id=self.kwargs['parent_lookup_raffle']).order_by('applied_raffles__created_at')
+
+
+class RaffleCandidateViewSet(ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+    serializer_class = RaffleCandidateSerializer
+
+    def get_queryset(self):
+        return RaffleCandidate.objects.filter(raffle_id=self.kwargs['parent_lookup_raffle'])
+
+
+class RaffleWinnerViewSet(ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+    serializer_class = RaffleWinnerSerializer
+
+    def get_queryset(self):
+        return RaffleWinner.objects.filter(
+            raffle_candidate__raffle_id=self.kwargs['parent_lookup_raffle'])

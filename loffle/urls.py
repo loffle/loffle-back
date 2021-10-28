@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import APIRootView
 from rest_framework_extensions.routers import ExtendedDefaultRouter
 
-from loffle.views import TicketViewSet, ProductViewSet, RaffleViewSet, ApplyUserViewSet
+from loffle.views import TicketViewSet, ProductViewSet, RaffleViewSet, ApplicantViewSet, RaffleCandidateViewSet, \
+    RaffleWinnerViewSet
 
 
 class LoffleAPI(APIRootView):
@@ -17,11 +18,20 @@ router.APIRootView = LoffleAPI
 
 router.register('tickets', TicketViewSet, basename='ticket')
 router.register('products', ProductViewSet, basename='product')
-router.register('raffles', RaffleViewSet, basename='raffle') \
-    .register('users',
-              ApplyUserViewSet,
-              basename='apply-user',
-              parents_query_lookups=('raffle',))
+
+raffle = router.register('raffles', RaffleViewSet, basename='raffle')
+raffle.register('applicants',
+                ApplicantViewSet,
+                basename='applicant',
+                parents_query_lookups=('raffle',))
+raffle.register('candidates',
+                RaffleCandidateViewSet,
+                basename='candidate',
+                parents_query_lookups=('raffle',))
+raffle.register('winner',
+                RaffleWinnerViewSet,
+                basename='winner',
+                parents_query_lookups=('raffle',))
 
 urlpatterns = [
     path('', include(router.urls)),

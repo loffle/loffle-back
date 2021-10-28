@@ -66,7 +66,7 @@ class User(AbstractUser):
         return self.applied_raffles \
             .select_related('raffle') \
             .annotate(raffle_failed=FilteredRelation(
-                        'raffle', condition=Q(raffle__progress='failed'))) \
+                'raffle', condition=Q(raffle__progress=__import__('loffle').models.Raffle.PROGRESS_CHOICES[3][0]))) \
             .aggregate(num_return_tickets=Coalesce(Count(F('raffle_failed')), 0))['num_return_tickets']
 
     # 사용자가 소유한 티켓 수량 = 구매한 티켓 수량 - 사용한 티켓 개수 + 응모한 래플이 취소되어 돌려받은 래플 개수

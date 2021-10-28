@@ -1,3 +1,5 @@
+from json import loads
+
 from rest_framework.fields import SerializerMethodField, DateTimeField
 from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField, HyperlinkedRelatedField, \
     PrimaryKeyRelatedField
@@ -5,7 +7,7 @@ from rest_framework.serializers import ModelSerializer
 
 from account.models import User
 from community.serializers.custom.fields import CommentListUrlField
-from loffle.models import Ticket, Product, Raffle
+from loffle.models import Ticket, Product, Raffle, RaffleCandidate, RaffleWinner
 
 
 class TicketSerializer(ModelSerializer):
@@ -61,7 +63,9 @@ class RaffleSerializer(CommonSerializer):
 
     apply_count = SerializerMethodField()
     apply_or_not = SerializerMethodField()
-    apply_user_list_url = CommentListUrlField(view_name='apply-user-list')
+    apply_user_list_url = CommentListUrlField(view_name='applicant-list')
+
+    # candidate_list_url = CommentListUrlField(view_name='candidate-list')
 
     class Meta:
         model = Raffle
@@ -76,30 +80,42 @@ class RaffleSerializer(CommonSerializer):
         return obj.applied.filter(user__pk=self.context['request'].user.pk).exists()
 
 
-class ApplyUserSerializer(ModelSerializer):
+class ApplicantSerializer(ModelSerializer):
     apply_at = SerializerMethodField()
+
     # row_number = SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('username', 'apply_at',) #'row_number')
+        fields = ('username', 'apply_at',)  # 'row_number')
 
     def get_apply_at(self, obj):
         raffle_id = self.context['view'].kwargs['parent_lookup_raffle']
         return DateTimeField().to_representation(
             obj.applied_raffles.get(raffle_id=raffle_id, user_id=obj.id).created_at)
 
-    # _row_number = 0
-    #
-    # def get_row_number(self, obj):
-    #     page_size = self.context['view'].pagination_class.page_size
-    #
-    #     page_num = self.context['request'].query_params.get('page', None)
-    #     if isinstance(page_num, list) and len(page_num) > 1:
-    #         page_num = page_num[-1]
-    #
-    #     if page_num and self._row_number % page_size == 0:
-    #         self._row_number = int(page_size) * (int(page_num) - 1)
-    #
-    #     self._row_number += 1
-    #     return self._row_number
+
+class RaffleCandidateSerializer(ModelSerializer):
+    user = StringRelatedField()
+
+    class Meta:
+        model = RaffleCandidate
+        fields = ('user', 'given_numbers')
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if 'given_numbers' in ret:
+            ret['given_numbers'] = loads(instance.given_numbers)
+        return ret
+
+
+class RaffleWinnerSerializer(ModelSerializer):
+    user = SerializerMethodField()
+
+    class Meta:
+        model = RaffleWinner
+        fields = ('user',)
+
+    def get_user(self, obj):
+        raffle_id = self.context['view'].kwargs['parent_lookup_raffle']
+        return str(obj.raffle_candidate.user)
