@@ -417,7 +417,7 @@ class Lotto(models.Model):
         # 응모 종료('done') 상태이고 발표일이 동일한 래플들 추첨 진행하기
         qs = Raffle.objects.filter(
             progress=Raffle.PROGRESS_CHOICES[2][0],
-            announce_date_time__date=datetime(year=2021, month=10, day=23)
+            announce_date_time__date=self.draw_date
         )
         for raffle in qs:
             candidate_winner = raffle.candidates.get(given_numbers__contains=self.bonus_num)
