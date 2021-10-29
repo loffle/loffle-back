@@ -378,6 +378,7 @@ class RaffleCandidate(models.Model):
         db_table = '_'.join((__package__, 'raffle_candidate'))
 
 
+# TODO: FK로 변경
 class RaffleWinner(models.Model):
     raffle_candidate = models.OneToOneField(RaffleCandidate,
                                             verbose_name='최종 당첨자',
