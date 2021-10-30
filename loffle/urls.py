@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import APIRootView
 from rest_framework_extensions.routers import ExtendedDefaultRouter
 
-from loffle.views import TicketViewSet, ProductViewSet, RaffleViewSet, ApplicantViewSet, RaffleCandidateViewSet, \
+from loffle.views import TicketViewSet, ProductViewSet, RaffleViewSet, RaffleApplicantViewSet, RaffleCandidateViewSet, \
     RaffleWinnerViewSet
 
 
@@ -21,7 +21,7 @@ router.register('products', ProductViewSet, basename='product')
 
 raffle = router.register('raffles', RaffleViewSet, basename='raffle')
 raffle.register('applicants',
-                ApplicantViewSet,
+                RaffleApplicantViewSet,
                 basename='applicant',
                 parents_query_lookups=('raffle',))
 raffle.register('candidates',
@@ -32,6 +32,7 @@ raffle.register('winner',
                 RaffleWinnerViewSet,
                 basename='winner',
                 parents_query_lookups=('raffle',))
+
 
 urlpatterns = [
     path('', include(router.urls)),
