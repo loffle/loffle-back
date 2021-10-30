@@ -1,20 +1,18 @@
 from django.core.exceptions import ValidationError
 from django.db.models import Case, When, Value
-from django.db.models.functions import Coalesce
-from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
-from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, \
-    HTTP_200_OK, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_200_OK
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from _common.views import CommonViewSet
+from _common.permissions import IsSuperuserOrReadOnly, IsStaffAndOwnerOrReadOnly
 from account.models import User
 from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply, RaffleCandidate, RaffleWinner
-from loffle.paginations import ApplyUserPagination, RafflePagination
-from loffle.permissions import IsSuperuserOrReadOnly, IsStaffOrReadOnly
-from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, ApplicantSerializer, \
+from loffle.paginations import RafflePagination
+from loffle.serializers import TicketSerializer, ProductSerializer, RaffleSerializer, RaffleApplicantSerializer, \
     RaffleCandidateSerializer, RaffleWinnerSerializer
 
 
@@ -25,7 +23,7 @@ class TicketViewSet(ModelViewSet):
     serializer_class = TicketSerializer
 
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
-            url_path='buy', url_name='buy-ticket')
+            url_path='buy', url_name='buy')
     def buy_ticket(self, request, **kwargs):
         ticket = self.get_object()
         ticket_buy = TicketBuy.objects.create(
@@ -50,26 +48,15 @@ class TicketViewSet(ModelViewSet):
         return Response(result, status=HTTP_200_OK)
 
 
-class CommonViewSet(ModelViewSet):
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def destroy(self, request, *args, **kwargs):
-        obj = self.get_object()
-        obj.is_deleted = True
-        obj.save()
-        return Response(status=HTTP_204_NO_CONTENT)
-
-
 class ProductViewSet(CommonViewSet):
-    permission_classes = [IsStaffOrReadOnly]  # Only Staff # TODO: obj 권한은 owner만 줄 것!
+    permission_classes = [IsStaffAndOwnerOrReadOnly]  # Only Staff and Owner has Obj Permission
 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
 
 class RaffleViewSet(CommonViewSet):
-    permission_classes = [IsStaffOrReadOnly]  # Only Staff
+    permission_classes = [IsStaffAndOwnerOrReadOnly]  # Only Staff and Owner has Obj Permission
     pagination_class = RafflePagination
 
     serializer_class = RaffleSerializer
@@ -116,7 +103,7 @@ class RaffleViewSet(CommonViewSet):
         return Response(serializer.data)
 
     @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
-            url_path='apply', url_name='apply-raffle')
+            url_path='apply', url_name='apply')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
         applied_cnt = obj.applied_count  # 현재 래플에 응모된 티켓 수량
@@ -134,8 +121,8 @@ class RaffleViewSet(CommonViewSet):
         return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
 
     @action(methods=('post',), detail=True, permission_classes=(AllowAny,), serializer_class=Serializer,
-            url_path='refresh-progress', url_name='refresh-raffle-progress')
-    def refresh_raffle_progress(self, request, **kwargs):
+            url_path='refresh-progress', url_name='refresh-progress')
+    def refresh_progress(self, request, **kwargs):
         """
         래플 상태를 새로고침 (임시)
         """
@@ -154,10 +141,9 @@ class RaffleViewSet(CommonViewSet):
         return Response({'detail': message}, status=HTTP_200_OK)
 
 
-class ApplicantViewSet(ReadOnlyModelViewSet):
+class RaffleApplicantViewSet(ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
-    # pagination_class = ApplyUserPagination
-    serializer_class = ApplicantSerializer
+    serializer_class = RaffleApplicantSerializer
 
     def get_queryset(self):
         return User.objects.filter(
@@ -169,7 +155,8 @@ class RaffleCandidateViewSet(ReadOnlyModelViewSet):
     serializer_class = RaffleCandidateSerializer
 
     def get_queryset(self):
-        return RaffleCandidate.objects.filter(raffle_id=self.kwargs['parent_lookup_raffle'])
+        return RaffleCandidate.objects.filter(
+            raffle_apply__raffle_id=self.kwargs['parent_lookup_raffle'])
 
 
 class RaffleWinnerViewSet(ReadOnlyModelViewSet):
@@ -178,4 +165,4 @@ class RaffleWinnerViewSet(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return RaffleWinner.objects.filter(
-            raffle_candidate__raffle_id=self.kwargs['parent_lookup_raffle'])
+            raffle_candidate__raffle_apply__raffle_id=self.kwargs['parent_lookup_raffle'])
