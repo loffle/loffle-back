@@ -398,7 +398,7 @@ class Lotto(models.Model):
     )
     bonus_num = models.SmallIntegerField(
         verbose_name='보너스 당첨 번호',
-        editable=False,
+        blank=True,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -415,7 +415,8 @@ class Lotto(models.Model):
         self.clean()
 
         self.draw_no = self.__calc_lotto_no()
-        self.bonus_num = self.__get_lotto_bonus_num()
+        if bool(self.bonus_num):
+            self.bonus_num = self.__get_lotto_bonus_num()
 
         super().save(*args, **kwargs)
 
