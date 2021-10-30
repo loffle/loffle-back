@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import timedelta, datetime
-from json import dumps
+from json import dumps, loads
 from random import sample
 
 import requests
@@ -162,7 +162,7 @@ class Raffle(models.Model):
 
     @property
     def candidates_count(self):
-        return self.candidates.count()
+        return self.applied.exclude(raffle_candidate=None).count()
 
     __original_end_date_time = None
 
@@ -253,15 +253,15 @@ class Raffle(models.Model):
                 break
 
         # 응모자를 후보자의 수로 추려내기
-        applicants_id_list = list(self.applied.select_related('user').values_list('user_id', flat=True))
-        candidates_id_list = sample(applicants_id_list, num_candidates)
+        raffle_apply_id_list = list(self.applied.values_list('id', flat=True))
+        candidates_id_list = sample(raffle_apply_id_list, num_candidates)
 
         candidates_list = []
         num_given_numbers = 45 // num_candidates
-        for i, user_id in enumerate(candidates_id_list):
+        for i, raffle_apply_id in enumerate(candidates_id_list):
             given_numbers = [j + i * num_given_numbers for j in range(1, num_given_numbers + 1)]
             candidates_list.append(
-                RaffleCandidate(raffle_id=self.pk, user_id=user_id, given_numbers=dumps(given_numbers)))
+                RaffleCandidate(raffle_apply_id=raffle_apply_id, given_numbers=dumps(given_numbers)))
 
         RaffleCandidate.objects.bulk_create(candidates_list)
         return True
@@ -278,13 +278,16 @@ class Raffle(models.Model):
         if self.progress != self.PROGRESS_CHOICES[2][0]:
             raise Exception("종료된 상태의 래플만 가능합니다.")
 
-        qs = Lotto.objects.filter(draw_date=self.announce_date_time)
+        qs = Lotto.objects.filter(draw_date=self.announce_date_time.date())
         if not Exists(qs):
             raise Exception("로또 번호가 존재하지 않습니다.")
 
         bonus_num = qs.first().bonus_num
-        candidate_winner = self.candidates.filter(given_numbers__contains=bonus_num)
-        rw = RaffleWinner(raffle_candidate=candidate_winner)
+        ra_candidates = self.applied.exclude(raffle_candidate=None)  # RaffleApply
+        for ra in ra_candidates:
+            if bonus_num in loads(ra.raffle_candidate.given_numbers):
+                rc_winner = ra.raffle_candidate
+        rw = RaffleWinner(raffle_candidate=rc_winner)
         rw.save()
 
 
@@ -359,8 +362,8 @@ class RaffleApply(models.Model):
 class RaffleCandidate(models.Model):
     raffle_apply = models.OneToOneField(
         RaffleApply,
+        related_name='raffle_candidate',
         verbose_name='1차 당첨',
-        related_name='candidate',
         on_delete=models.CASCADE,
     )
     given_numbers = models.CharField(
@@ -375,8 +378,8 @@ class RaffleCandidate(models.Model):
 class RaffleWinner(models.Model):
     raffle_candidate = models.OneToOneField(
         RaffleCandidate,
+        related_name='raffle_winner',
         verbose_name='최종 당첨',
-        related_name='winner',
         on_delete=models.CASCADE,
     )
 
@@ -414,7 +417,7 @@ class Lotto(models.Model):
         self.draw_no = self.__calc_lotto_no()
         self.bonus_num = self.__get_lotto_bonus_num()
 
-        # super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
         # 응모 종료('done') 상태이고 발표일이 동일한 래플들 추첨 진행하기
         qs = Raffle.objects.filter(
@@ -422,9 +425,7 @@ class Lotto(models.Model):
             announce_date_time__date=self.draw_date
         )
         for raffle in qs:
-            candidate_winner = raffle.candidates.get(given_numbers__contains=self.bonus_num)
-            rw = RaffleWinner(raffle_candidate=candidate_winner)
-            rw.save()
+            raffle.draw_winner()
 
     def __calc_lotto_no(self):
         """
@@ -437,6 +438,15 @@ class Lotto(models.Model):
         return ((self.draw_date - _first_draw_date) / 7).days + 1
 
     def __get_lotto_bonus_num(self):
+        # TODO: timeout 설정, 응답 없을 경우 예외 처리
+        """
+        Exception Type: ConnectionError at /admin/loffle/lotto/add/
+        Exception Value: HTTPSConnectionPool(host='www.dhlottery.co.kr', port=443): Max retries exceeded with url:
+        /common.do?method=getLottoNumber&drwNo=987 (Caused by NewConnectionError(
+            '<urllib3.connection.HTTPSConnection object at 0x0000023114F3CC70>: Failed to establish a new connection:
+                [WinError 10060] 연결된 구성원으로부터 응답이 없어 연결하지 못했거나, 호스트로부터 응답이 없어 연결이 끊어졌습니다'))
+        """
+
         lotto_api_url = 'https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo='
         draw_no = self.__calc_lotto_no()
 

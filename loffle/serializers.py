@@ -87,6 +87,7 @@ class RaffleApplicantSerializer(CommonSerializer):
 
 
 class RaffleCandidateSerializer(CommonSerializer):
+    user = StringRelatedField(source='raffle_apply.user', read_only=True)
 
     class Meta:
         model = RaffleCandidate
@@ -100,11 +101,8 @@ class RaffleCandidateSerializer(CommonSerializer):
 
 
 class RaffleWinnerSerializer(CommonSerializer):
-    user = SerializerMethodField()
+    user = StringRelatedField(source='raffle_candidate.raffle_apply.user')
 
     class Meta:
         model = RaffleWinner
         fields = ('user',)
-
-    def get_user(self, obj):
-        return str(obj.raffle_candidate.user)

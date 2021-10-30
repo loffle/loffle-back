@@ -155,7 +155,8 @@ class RaffleCandidateViewSet(ReadOnlyModelViewSet):
     serializer_class = RaffleCandidateSerializer
 
     def get_queryset(self):
-        return RaffleCandidate.objects.filter(raffle_id=self.kwargs['parent_lookup_raffle'])
+        return RaffleCandidate.objects.filter(
+            raffle_apply__raffle_id=self.kwargs['parent_lookup_raffle'])
 
 
 class RaffleWinnerViewSet(ReadOnlyModelViewSet):
@@ -164,4 +165,4 @@ class RaffleWinnerViewSet(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return RaffleWinner.objects.filter(
-            raffle_candidate__raffle_id=self.kwargs['parent_lookup_raffle'])
+            raffle_candidate__raffle_apply__raffle_id=self.kwargs['parent_lookup_raffle'])
