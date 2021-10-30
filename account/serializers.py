@@ -1,11 +1,12 @@
-from rest_framework import serializers
+from rest_framework.fields import CharField
+from rest_framework.serializers import ModelSerializer
 
 from account.models import User
 
 
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(label='비밀번호', max_length=128, required=True, style={'input_type': 'password'},
-                                     write_only=True)
+class UserSerializer(ModelSerializer):
+    password = CharField(label='비밀번호', max_length=128, required=True, style={'input_type': 'password'},
+                         write_only=True)
 
     class Meta:
         model = User
@@ -18,3 +19,9 @@ class UserSerializer(serializers.ModelSerializer):
         # validated_dict['is_active'] = False
         user = User.objects.create_user(**validated_dict)
         return user
+
+
+class MySerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'sex', 'phone')
