@@ -1,5 +1,5 @@
-from rest_framework.fields import CharField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.fields import CharField, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, Serializer
 
 from account.models import User
 
@@ -21,7 +21,15 @@ class UserSerializer(ModelSerializer):
         return user
 
 
-class MySerializer(ModelSerializer):
+class MyTicketSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email', 'sex', 'phone')
+        fields = ('num_buy_tickets', 'num_use_tickets', 'num_return_tickets', 'num_tickets')
+
+
+class MySerializer(ModelSerializer):
+    ticket = MyTicketSerializer(source='*', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'sex', 'phone', 'ticket')
