@@ -357,16 +357,10 @@ class RaffleApply(models.Model):
 
 
 class RaffleCandidate(models.Model):
-    raffle = models.ForeignKey(
-        Raffle,
-        verbose_name='래플',
-        related_name='candidates',
-        on_delete=models.CASCADE,
-    )
-    user = models.ForeignKey(
-        User,
-        verbose_name='1차 당첨자',
-        related_name='candidate_raffles',
+    raffle_apply = models.OneToOneField(
+        RaffleApply,
+        verbose_name='1차 당첨',
+        related_name='candidate',
         on_delete=models.CASCADE,
     )
     given_numbers = models.CharField(
@@ -378,12 +372,13 @@ class RaffleCandidate(models.Model):
         db_table = '_'.join((__package__, 'raffle_candidate'))
 
 
-# TODO: FK로 변경
 class RaffleWinner(models.Model):
-    raffle_candidate = models.OneToOneField(RaffleCandidate,
-                                            verbose_name='최종 당첨자',
-                                            on_delete=models.CASCADE,
-                                            )
+    raffle_candidate = models.OneToOneField(
+        RaffleCandidate,
+        verbose_name='최종 당첨',
+        related_name='winner',
+        on_delete=models.CASCADE,
+    )
 
     class Meta:
         db_table = '_'.join((__package__, 'raffle_winner'))
