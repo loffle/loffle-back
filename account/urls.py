@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import APIRootView
 from rest_framework_extensions.routers import ExtendedDefaultRouter
 
-from account.views import LoginView, SignUpView, LogoutView, ActivateView, CheckUserInfoView, UserViewSet
+from account.views import LoginView, SignUpView, LogoutView, ActivateView, CheckUserInfoView, MyView
 
 
 class AccountAPI(APIRootView):
@@ -15,11 +15,13 @@ class AccountAPI(APIRootView):
 router = ExtendedDefaultRouter(trailing_slash=False)
 router.APIRootView = AccountAPI
 
-router.register('users', UserViewSet, basename='user')
+# router.register('users', UserViewSet, basename='user')
 
 
 urlpatterns = [
     path('', include(router.urls)),
+
+    path('my', MyView.as_view(), name='my'),
 
     path('login', LoginView.as_view(), name='login'),
     path('logout', LogoutView.as_view(), name='logout'),
