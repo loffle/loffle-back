@@ -1,4 +1,4 @@
-from rest_framework.relations import StringRelatedField
+from rest_framework.relations import StringRelatedField, PrimaryKeyRelatedField
 from rest_framework.serializers import HyperlinkedModelSerializer, Serializer
 
 
@@ -11,6 +11,7 @@ class CustomSerializer(Serializer):
 
 
 class CommonSerializer(HyperlinkedModelSerializer):
+    id = PrimaryKeyRelatedField(read_only=True)
     user = StringRelatedField()
 
     def to_representation(self, instance):
