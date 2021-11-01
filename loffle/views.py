@@ -3,12 +3,12 @@ from django.db.models import Case, When, Value
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_200_OK
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from _common.views import CommonViewSet
 from _common.permissions import IsSuperuserOrReadOnly, IsStaffAndOwnerOrReadOnly
+from _common.serializers import CustomSerializer
 from account.models import User
 from loffle.models import Ticket, TicketBuy, Product, Raffle, RaffleApply, RaffleCandidate, RaffleWinner
 from loffle.paginations import RafflePagination
@@ -22,7 +22,7 @@ class TicketViewSet(ModelViewSet):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
 
-    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
+    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=CustomSerializer,
             url_path='buy', url_name='buy')
     def buy_ticket(self, request, **kwargs):
         ticket = self.get_object()
@@ -32,7 +32,7 @@ class TicketViewSet(ModelViewSet):
         )
         return Response({'detail': '티켓 구매 성공✅'}, status=HTTP_201_CREATED)
 
-    @action(methods=('get',), detail=False, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
+    @action(methods=('get',), detail=False, permission_classes=(IsAuthenticated,), serializer_class=CustomSerializer,
             url_path='my-ticket', url_name='my-ticket')
     def get_ticket(self, request, **kwargs):
         # obj = self.get_object()
@@ -102,7 +102,7 @@ class RaffleViewSet(CommonViewSet):
         serializer = self.get_serializer(query_list, many=True)
         return Response(serializer.data)
 
-    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=Serializer,
+    @action(methods=('post',), detail=True, permission_classes=(IsAuthenticated,), serializer_class=CustomSerializer,
             url_path='apply', url_name='apply')
     def apply_raffle(self, request, **kwargs):
         obj = self.get_object()
@@ -120,7 +120,7 @@ class RaffleViewSet(CommonViewSet):
         ordinal_number = applied_cnt + 1
         return Response({'detail': '래플 응모 성공✅', 'ordinal_number': ordinal_number}, status=HTTP_201_CREATED)
 
-    @action(methods=('post',), detail=True, permission_classes=(AllowAny,), serializer_class=Serializer,
+    @action(methods=('post',), detail=True, permission_classes=(AllowAny,), serializer_class=CustomSerializer,
             url_path='refresh-progress', url_name='refresh-progress')
     def refresh_progress(self, request, **kwargs):
         """
