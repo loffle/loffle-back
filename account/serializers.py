@@ -1,5 +1,5 @@
-from rest_framework.fields import CharField, SerializerMethodField
-from rest_framework.serializers import ModelSerializer, Serializer
+from rest_framework.fields import CharField
+from rest_framework.serializers import ModelSerializer
 
 from account.models import User
 

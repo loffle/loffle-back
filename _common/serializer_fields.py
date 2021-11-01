@@ -1,39 +1,9 @@
-from rest_framework.fields import SerializerMethodField
-from rest_framework.relations import HyperlinkedRelatedField, HyperlinkedIdentityField
+from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.reverse import reverse
-from rest_framework.serializers import Serializer
 from rest_framework_extensions.settings import extensions_api_settings
 
 
-class LikeField(Serializer):
-    like_count = SerializerMethodField()
-    like_or_not = SerializerMethodField()
-
-    @staticmethod
-    def get_like_count(obj):
-        return obj.like.count()
-
-    def get_like_or_not(self, obj):
-        return obj.like.filter(pk=self.context['request'].user.pk).exists()
-
-
-class CommentField(Serializer):
-    comment_count = SerializerMethodField()
-
-    @staticmethod
-    def get_comment_count(obj):
-        return obj.comments.count()
-
-
-class AnswerField(Serializer):
-    answer_count = SerializerMethodField()
-
-    @staticmethod
-    def get_answer_count(obj):
-        return obj.answers.count()
-
-
-class CommentListUrlField(HyperlinkedIdentityField):
+class ChildListUrlField(HyperlinkedIdentityField):
     parent_kwarg_prefix = extensions_api_settings.DEFAULT_PARENT_LOOKUP_KWARG_NAME_PREFIX
 
     def get_url(self, obj, view_name, request, format):
@@ -49,7 +19,7 @@ class CommentListUrlField(HyperlinkedIdentityField):
     #     return self.get_queryset().get(**lookup_kwargs)
 
 
-class CommentDetailUrlField(HyperlinkedIdentityField):
+class ChildDetailUrlField(HyperlinkedIdentityField):
     parent_kwarg_prefix = extensions_api_settings.DEFAULT_PARENT_LOOKUP_KWARG_NAME_PREFIX
 
     def get_url(self, obj, view_name, request, format):
