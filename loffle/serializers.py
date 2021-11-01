@@ -2,19 +2,17 @@ from json import loads
 
 from rest_framework.fields import SerializerMethodField, DateTimeField
 from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField, PrimaryKeyRelatedField
-from rest_framework.reverse import reverse
-from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer, Serializer
-from rest_framework_extensions.fields import ResourceUriField
+from rest_framework.serializers import HyperlinkedModelSerializer
 
-from _common.serializers import CommonSerializer
+from _common.serializers import CommonSerializer, CustomSerializer
 from account.models import User
-from community.serializers.custom.fields import CommentListUrlField
+from _common.serializer_fields import ChildListUrlField
 from loffle.models import Ticket, Product, Raffle, RaffleCandidate, RaffleWinner
 
 
 class TicketSerializer(CommonSerializer):
 
-    class TicketLinksSerializer(Serializer):
+    class TicketLinksSerializer(CustomSerializer):
         buy = HyperlinkedIdentityField(view_name='ticket-buy')
 
     _links = TicketLinksSerializer(source='*', read_only=True)
@@ -46,17 +44,11 @@ class RaffleSerializer(CommonSerializer):
     apply_count = SerializerMethodField()
     apply_or_not = SerializerMethodField()
 
-    class RaffleLinksSerializer(Serializer):
+    class RaffleLinksSerializer(CustomSerializer):
         apply = HyperlinkedIdentityField(view_name='raffle-apply')
-        applicants = CommentListUrlField(view_name='applicant-list')
-        candidates = CommentListUrlField(view_name='candidate-list')
-        winner = CommentListUrlField(view_name='winner-list')
-
-        def create(self, validated_data):
-            pass
-
-        def update(self, instance, validated_data):
-            pass
+        applicants = ChildListUrlField(view_name='applicant-list')
+        candidates = ChildListUrlField(view_name='candidate-list')
+        winner = ChildListUrlField(view_name='winner-list')
 
     _links = RaffleLinksSerializer(source='*', read_only=True)
 

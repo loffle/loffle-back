@@ -1,5 +1,13 @@
-from rest_framework.relations import HyperlinkedIdentityField, StringRelatedField
-from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
+from rest_framework.relations import StringRelatedField
+from rest_framework.serializers import HyperlinkedModelSerializer, Serializer
+
+
+class CustomSerializer(Serializer):
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
 
 
 class CommonSerializer(HyperlinkedModelSerializer):

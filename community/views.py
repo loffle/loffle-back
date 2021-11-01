@@ -4,20 +4,19 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
+from _common.views import CommonViewSet
 from community.models import Post, PostComment, Review, ReviewComment, Notice, Question, Answer, QuestionType
 from community.paginations import CommunityPagination
-from community.permissions import IsOwnerOrReadOnly
-from community.serializers.serializers import PostListSerializer, PostDetailSerializer, PostCommentListSerializer, \
-    PostCommentDetailSerializer, ReviewCommentDetailSerializer, ReviewCommentListSerializer, ReviewListSerializer, \
-    ReviewDetailSerializer, NoticeListSerializer, NoticeDetailSerializer, QuestionListSerializer, \
-    QuestionDetailSerializer, AnswerDetailSerializer, AnswerListSerializer, QuestionTypeSerializer
+from _common.permissions import IsOwnerOrReadOnly
+from community.serializers import PostSerializer, PostCommentSerializer, ReviewSerializer, ReviewCommentSerializer, \
+    NoticeSerializer, QuestionSerializer, AnswerSerializer, QuestionTypeSerializer
 
 
-class CommonViewSet(ModelViewSet):
+class CommunityViewSet(CommonViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly & IsOwnerOrReadOnly]
     pagination_class = CommunityPagination
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -26,24 +25,6 @@ class CommonViewSet(ModelViewSet):
     search_fields = ('content',)
     ordering_fields = '__all__'  # ('created_at', 'like_count')
     ordering = '-created_at'
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def destroy(self, request, *args, **kwargs):
-        obj = self.get_object()
-        obj.is_deleted = True
-        obj.save()
-        return Response(status=HTTP_204_NO_CONTENT)
-
-    def get_serializer_class(self):
-        try:
-            if self.detail is False:
-                return self.serializer_list_class
-            else:
-                return self.serializer_detail_class
-        except (KeyError, AttributeError):
-            return super().get_serializer_class()
 
     def add_like(self, request, **kwargs):
         obj = self.get_object()
@@ -59,7 +40,7 @@ class CommonViewSet(ModelViewSet):
         return Response({'detail': '잘못된 요청입니다.'}, status=HTTP_400_BAD_REQUEST)
 
 
-class ChildViewSet(NestedViewSetMixin, CommonViewSet):
+class ChildViewSet(NestedViewSetMixin, CommunityViewSet):
     ordering = 'created_at'
 
     def perform_create(self, serializer):
@@ -75,102 +56,77 @@ class ChildViewSet(NestedViewSetMixin, CommonViewSet):
 
 # ===============================================================
 
-class PostViewSet(CommonViewSet):
+class PostViewSet(CommunityViewSet):
+    # model = Post
     queryset = Post.objects.all()
-
-    serializer_list_class = PostListSerializer
-    serializer_detail_class = PostDetailSerializer
-
-    model = Post
-
-    search_fields = CommonViewSet.search_fields + ('title',)
+    serializer_class = PostSerializer
+    search_fields = CommunityViewSet.search_fields + ('title',)
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='like', url_name='add-like')
+            url_path='like', url_name='like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
 
 class PostCommentViewSet(ChildViewSet):
-    queryset = PostComment.objects.all()
-
-    serializer_list_class = PostCommentListSerializer
-    serializer_detail_class = PostCommentDetailSerializer
-
-    parent_model = Post
     model = PostComment
+    parent_model = Post
+    queryset = PostComment.objects.all()
+    serializer_class = PostCommentSerializer
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='like', url_name='add-like')
+            url_path='like', url_name='like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
 
-class ReviewViewSet(CommonViewSet):
+class ReviewViewSet(CommunityViewSet):
+    # model = Review
     queryset = Review.objects.all()
-
-    serializer_list_class = ReviewListSerializer
-    serializer_detail_class = ReviewDetailSerializer
-
-    model = Review
-
-    search_fields = CommonViewSet.search_fields
+    serializer_class = ReviewSerializer
+    search_fields = CommunityViewSet.search_fields
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='like', url_name='add-like')
+            url_path='like', url_name='like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
 
 class ReviewCommentViewSet(ChildViewSet):
-    queryset = ReviewComment.objects.all()
-
-    serializer_list_class = ReviewCommentListSerializer
-    serializer_detail_class = ReviewCommentDetailSerializer
-
-    parent_model = Review
     model = ReviewComment
+    parent_model = Review
+    queryset = ReviewComment.objects.all()
+    serializer_class = ReviewCommentSerializer
 
     @action(methods=('post', 'delete'), detail=True, permission_classes=(IsAuthenticated,),
-            url_path='like', url_name='add-like')
+            url_path='like', url_name='like')
     def add_like(self, request, **kwargs):
         return super().add_like(request, **kwargs)
 
 
 # ---------------------------------------------------------------
 
-class NoticeViewSet(CommonViewSet):
+class NoticeViewSet(CommunityViewSet):
+    # model = Notice
     queryset = Notice.objects.all()
-
-    serializer_list_class = NoticeListSerializer
-    serializer_detail_class = NoticeDetailSerializer
-
-    model = Notice
+    serializer_class = NoticeSerializer
 
 
 # ---------------------------------------------------------------
 
-class QuestionViewSet(CommonViewSet):
+class QuestionViewSet(CommunityViewSet):
+    # model = Question
     queryset = Question.objects.all()
-
-    serializer_list_class = QuestionListSerializer
-    serializer_detail_class = QuestionDetailSerializer
-
-    model = Question
-
-    search_fields = CommonViewSet.search_fields + ('title',)
+    serializer_class = QuestionSerializer
+    search_fields = CommunityViewSet.search_fields + ('title',)
 
 
 class AnswerViewSet(ChildViewSet):
-    queryset = Answer.objects.all()
-
-    serializer_list_class = AnswerListSerializer
-    serializer_detail_class = AnswerDetailSerializer
-
-    parent_model = Question
     model = Answer
-
-    search_fields = CommonViewSet.search_fields + ('title',)
+    parent_model = Question
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+    search_fields = CommunityViewSet.search_fields + ('title',)
 
 
 # ---------------------------------------------------------------
