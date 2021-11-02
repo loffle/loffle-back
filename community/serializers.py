@@ -93,10 +93,10 @@ class QuestionSerializer(CommunitySerializer, AnswerField):
 class AnswerSerializer(CommunitySerializer):
     url = ChildDetailUrlField(view_name='answer-detail')
 
-    class QuestionLinksSerializer(CustomSerializer):
+    class AnswerLinksSerializer(CustomSerializer):
         pass
 
-    _links = QuestionLinksSerializer(source='*', read_only=True)
+    _links = AnswerLinksSerializer(source='*', read_only=True)
 
     class Meta:
         model = Answer

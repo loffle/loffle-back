@@ -146,6 +146,8 @@ class RaffleApplicantViewSet(ReadOnlyModelViewSet):
     serializer_class = RaffleApplicantSerializer
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return User.objects.none()
         return User.objects.filter(
             applied_raffles__raffle_id=self.kwargs['parent_lookup_raffle']).order_by('applied_raffles__created_at')
 
@@ -155,6 +157,8 @@ class RaffleCandidateViewSet(ReadOnlyModelViewSet):
     serializer_class = RaffleCandidateSerializer
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return RaffleCandidate.objects.none()
         return RaffleCandidate.objects.filter(
             raffle_apply__raffle_id=self.kwargs['parent_lookup_raffle'])
 
@@ -164,5 +168,7 @@ class RaffleWinnerViewSet(ReadOnlyModelViewSet):
     serializer_class = RaffleWinnerSerializer
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return RaffleWinner.objects.none()
         return RaffleWinner.objects.filter(
             raffle_candidate__raffle_apply__raffle_id=self.kwargs['parent_lookup_raffle'])
